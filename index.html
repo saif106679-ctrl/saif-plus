@@ -2,64 +2,59 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SAIF PLUS AI</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --tg-blue: #2481cc;
-            --soft-blue: #e0f2fe;
-            --dark-black: #111827;
-            --white: #ffffff;
-        }
-
-        /* إصلاحات شاملة للمتصفحات */
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-        body {
-            font-family: 'Tajawal', sans-serif;
-            margin: 0; padding: 0;
-            background-color: var(--soft-blue);
-            display: flex; justify-content: center;
-            height: 100vh; height: -webkit-fill-available; /* لسفاري */
-            overflow: hidden;
-        }
-
-        .mobile-wrapper {
-            width: 100%; max-width: 450px;
-            background-color: var(--white);
-            display: flex; flex-direction: column;
-            box-shadow: 0 0 25px rgba(0,0,0,0.1);
-            height: 100%;
-        }
-
-        #registration-page, #chat-page {
-            flex: 1; display: flex; flex-direction: column; overflow: hidden;
-        }
-
-        .brand-name { font-size: 3.5rem; font-weight: 900; color: var(--dark-black); text-align: center; margin: 40px 0; }
-        .reg-card { padding: 0 30px; flex: 1; }
+        :root { --blue: #2481cc; --soft-blue: #e0f2fe; --black: #111827; }
+        * { box-sizing: border-box; }
+        body { font-family: sans-serif; margin: 0; background: var(--soft-blue); display: flex; justify-content: center; height: 100vh; }
         
-        input, select {
-            width: 100%; padding: 15px; margin: 10px 0;
-            border: 2px solid #f0f0f0; border-radius: 12px;
-            font-size: 16px; outline: none; -webkit-appearance: none;
-        }
+        .mobile-wrapper { width: 100%; max-width: 450px; background: white; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        
+        #registration-page, #chat-page { flex: 1; display: flex; flex-direction: column; padding: 20px; }
+        #chat-page { display: none; padding: 0; }
 
-        .btn-start {
-            width: 100%; padding: 18px; background: var(--dark-black);
-            color: white; border: none; border-radius: 12px;
-            font-weight: bold; font-size: 18px; cursor: pointer;
-        }
+        .brand { font-size: 3rem; font-weight: bold; text-align: center; margin: 40px 0; color: var(--black); }
+        input, select { width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; }
+        .btn { width: 100%; padding: 18px; background: var(--black); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
 
-        #chat-page { display: none; }
-        .chat-header { background: var(--white); padding: 15px; border-bottom: 1px solid #eee; text-align: center; font-weight: 900; }
+        #chat-container { flex: 1; overflow-y: auto; padding: 15px; background: #f8fafc; display: flex; flex-direction: column; gap: 10px; }
+        .msg { max-width: 80%; padding: 10px 15px; border-radius: 15px; line-height: 1.4; font-size: 15px; }
+        .sent { align-self: flex-end; background: #dcf8c6; }
+        .received { align-self: flex-start; background: white; border: 1px solid #eee; }
+        
+        .input-area { padding: 15px; display: flex; gap: 10px; border-top: 1px solid #eee; }
+        #uInp { flex: 1; margin: 0; }
+    </style>
+</head>
+<body>
 
-        #chat-container {
-            flex: 1; overflow-y: auto; padding: 20px;
-            display: flex; flex-direction: column; gap: 12px;
-            background: linear-gradient(rgba(248, 250, 252, 0.95), rgba(248, 250, 252, 0.95)), 
-                        url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
-        }
+    <div class="mobile-wrapper">
+        <div id="registration-page">
+            <div class="brand">SAIF PLUS</div>
+            <input type="text" id="uName" placeholder="الاسم الكامل">
+            <input type="number" id="uAge" placeholder="العمر">
+            <select id="uCountry">
+                <option value="البحرين">🇧🇭 البحرين</option>
+                <option value="السعودية">🇸🇦 السعودية</option>
+                <option value="الإمارات">🇦🇪 الإمارات</option>
+            </select>
+            <button class="btn" onclick="start()">دخول النظام</button>
+        </div>
 
-        .msg { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size:
+        <div id="chat-page">
+            <div style="padding:15px; text-align:center; font-weight:bold; border-bottom:1px solid #eee;">SAIF PLUS AI</div>
+            <div id="chat-container"></div>
+            <div class="input-area">
+                <input type="text" id="uInp" placeholder="اسأل..." onkeypress="if(event.key==='Enter') ask()">
+                <button onclick="ask()" style="background:var(--blue); color:white; border:none; border-radius:50%; width:45px; height:45px;">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const GK = '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';
+        const TT = '8311362193:AAF0ahoskmhZQMW_eFEiBfXANgK_zHNlfGM';
+        const ID = '1565935868';
+        
+        let memory = [{ role: "system", content: "أنت SAIF PLUS AI مساعد ذكي ب
