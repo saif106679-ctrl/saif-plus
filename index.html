@@ -6,61 +6,192 @@
     <title>SAIF PLUS AI</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root { --tg-blue: #2481cc; --tg-bg: #f0f2f5; --dark-black: #1a1a1a; --white: #ffffff; }
-        body { font-family: 'Tajawal', sans-serif; margin: 0; background-color: var(--tg-bg); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        
-        /* صفحة التسجيل الاحترافية */
-        #registration-page { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px; background: linear-gradient(135deg, #ffffff 0%, #e6e6e6 100%); }
-        .brand-name { font-size: 3.5rem; font-weight: 900; color: var(--dark-black); margin-bottom: 30px; letter-spacing: 2px; }
-        .reg-card { background: var(--white); width: 100%; max-width: 400px; padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
-        input, select { width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #eee; border-radius: 12px; font-size: 16px; box-sizing: border-box; outline: none; }
-        .btn-start { width: 100%; padding: 18px; background: var(--dark-black); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; margin-top: 20px; transition: 0.3s; }
-        .btn-start:hover { background: #333; }
+        :root {
+            --tg-blue: #2481cc;
+            --soft-blue: #e0f2fe; /* اللون الأزرق الفاتح للأطراف */
+            --dark-black: #111827;
+            --white: #ffffff;
+        }
 
-        /* واجهة الدردشة بتصميم تليجرام */
-        #chat-page { display: none; flex-direction: column; height: 100vh; }
-        .chat-header { background: var(--white); padding: 15px 20px; border-bottom: 1px solid #ddd; text-align: center; }
-        #chat-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
-        .msg { max-width: 85%; padding: 10px 15px; border-radius: 15px; font-size: 16px; line-height: 1.4; }
-        .sent { align-self: flex-end; background: #effdde; border-bottom-right-radius: 2px; }
-        .received { align-self: flex-start; background: var(--white); border-bottom-left-radius: 2px; }
-        .input-area { background: var(--white); padding: 10px; display: flex; gap: 10px; align-items: center; }
-        .send-btn { background: var(--tg-blue); color: white; width: 50px; height: 50px; border-radius: 50%; border: none; cursor: pointer; font-size: 20px; }
+        body {
+            font-family: 'Tajawal', sans-serif;
+            margin: 0;
+            background-color: var(--soft-blue); /* أطراف الشاشة */
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        /* تحديد حجم الصفحة للهواتف فقط */
+        .mobile-wrapper {
+            width: 100%;
+            max-width: 450px; /* حجم هاتف مثالي */
+            background-color: var(--white);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        #registration-page, #chat-page {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .brand-name {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--dark-black);
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .reg-card { padding: 30px; }
+        input, select {
+            width: 100%; padding: 15px; margin: 10px 0;
+            border: 2px solid #f0f0f0; border-radius: 12px;
+            font-size: 16px; box-sizing: border-box; outline: none;
+        }
+
+        .btn-start {
+            width: 100%; padding: 18px; background: var(--dark-black);
+            color: white; border: none; border-radius: 12px;
+            font-weight: bold; font-size: 18px; cursor: pointer;
+        }
+
+        /* واجهة الدردشة */
+        #chat-page { display: none; }
+        .chat-header {
+            background: var(--white); padding: 15px;
+            border-bottom: 1px solid #eee; text-align: center; font-weight: bold;
+        }
+
+        #chat-container {
+            flex: 1; overflow-y: auto; padding: 20px;
+            display: flex; flex-direction: column; gap: 12px;
+            /* خلفية ذكاء اصطناعي تقنية */
+            background: linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.9)), 
+                        url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+            background-color: #f8fafc;
+        }
+
+        .msg { max-width: 85%; padding: 12px; border-radius: 15px; font-size: 15px; line-height: 1.5; }
+        .sent { align-self: flex-end; background: #dcf8c6; border-bottom-right-radius: 2px; color: #000; }
+        .received { align-self: flex-start; background: var(--white); border-bottom-left-radius: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+        .input-area {
+            background: var(--white); padding: 15px;
+            display: flex; gap: 10px; border-top: 1px solid #eee;
+        }
+
+        .send-btn {
+            background: var(--tg-blue); color: white; width: 45px; height: 45px;
+            border-radius: 50%; border: none; cursor: pointer; font-size: 20px;
+        }
     </style>
 </head>
 <body>
 
-    <div id="registration-page">
-        <div class="brand-name">SAIF PLUS</div>
-        <div class="reg-card">
-            <h3 style="text-align: center; margin-bottom: 20px;">إنشاء حساب جديد</h3>
-            <form id="regForm">
-                <input type="text" id="name" placeholder="الاسم الكامل" required>
-                <input type="number" id="age" placeholder="العمر" required>
-                <select id="country" required>
-                    <option value="" disabled selected>اختر الدولة</option>
+    <div class="mobile-wrapper">
+        <div id="registration-page">
+            <div class="brand-name">SAIF PLUS</div>
+            <div class="reg-card">
+                <input type="text" id="name" placeholder="الاسم">
+                <input type="number" id="age" placeholder="العمر">
+                <select id="country">
                     <option value="البحرين">🇧🇭 البحرين</option>
                     <option value="السعودية">🇸🇦 السعودية</option>
                     <option value="الإمارات">🇦🇪 الإمارات</option>
                     <option value="الكويت">🇰🇼 الكويت</option>
                     <option value="قطر">🇶🇦 قطر</option>
-                    <option value="عمان">🇴🇲 سلطنة عمان</option>
+                    <option value="عمان">🇴🇲 عمان</option>
                 </select>
-                <button type="submit" class="btn-start">دخول النظام</button>
-            </form>
+                <button class="btn-start" onclick="startSystem()">دخول النظام</button>
+            </div>
         </div>
-    </div>
 
-    <div id="chat-page">
-        <div class="chat-header"><h2>SAIF PLUS AI</h2></div>
-        <div id="chat-container">
-            <div class="msg received">مرحباً بك! أنا نظام سيف بلس المطور. تفضل بسؤالي.</div>
-        </div>
-        <div class="input-area">
-            <input type="text" id="userInput" placeholder="اكتب رسالتك هنا...">
-            <button class="send-btn" onclick="askAI()">➤</button>
+        <div id="chat-page">
+            <div class="chat-header">SAIF PLUS AI</div>
+            <div id="chat-container"></div>
+            <div class="input-area">
+                <input type="text" id="userInput" placeholder="اسأل العقل الذكي...">
+                <button class="send-btn" onclick="askAI()">➤</button>
+            </div>
         </div>
     </div>
 
     <script>
-        const GROQ_KEY
+        const GROQ_KEY = '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';
+        const TG_TOKEN = '8311362193:AAF0ahoskmhZQMW_eFEiBfXANgK_zHNlfGM';
+        const MY_ID = '1565935868';
+        
+        // ذاكرة العقل - لتخزين سياق المحادثة
+        let chatMemory = [
+            { role: "system", content: "أنت SAIF PLUS AI، مساعد ذكي متطور. تذكر دائماً أنك تتحدث مع مستخدمين من دول الخليج بلهجة محترمة وذكية." }
+        ];
+
+        async function logToTG(txt) {
+            fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({chat_id: MY_ID, text: txt, parse_mode: 'HTML'})
+            });
+        }
+
+        function startSystem() {
+            const name = document.getElementById('name').value;
+            if(!name) return alert("يرجى إدخال الاسم");
+            
+            document.getElementById('registration-page').style.display = 'none';
+            document.getElementById('chat-page').style.display = 'flex';
+            
+            const welcomeMsg = `مرحباً بك ${name} في نظام SAIF PLUS AI. أنا عقلك الاصطناعي، كيف أخدمك؟`;
+            addMessage(welcomeMsg, 'received');
+            logToTG(`🔔 <b>دخول جديد:</b> ${name}`);
+        }
+
+        function addMessage(txt, type) {
+            const box = document.getElementById('chat-container');
+            box.innerHTML += `<div class="msg ${type}">${txt}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        async function askAI() {
+            const input = document.getElementById('userInput');
+            const val = input.value.trim();
+            if(!val) return;
+
+            addMessage(val, 'sent');
+            input.value = "";
+            logToTG(`📩 <b>زائر:</b> ${val}`);
+
+            // إضافة الرسالة للذاكرة (العقل لا ينسى)
+            chatMemory.push({ role: "user", content: val });
+
+            try {
+                const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST",
+                    headers: {"Authorization": `Bearer ${GROQ_KEY}`, "Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        model: "llama-3.3-70b-versatile",
+                        messages: chatMemory // نرسل الذاكرة كاملة
+                    })
+                });
+                const data = await res.json();
+                const reply = data.choices[0].message.content;
+
+                addMessage(reply, 'received');
+                logToTG(`🤖 <b>AI:</b> ${reply}`);
+
+                // حفظ رد ال AI في الذاكرة أيضاً لكي يتذكر رده السابق
+                chatMemory.push({ role: "assistant", content: reply });
+
+            } catch(e) {
+                addMessage("عذراً، العقل يواجه ضغطاً حالياً.", 'received');
+            }
+        }
+    </script>
+</body>
+</html>
