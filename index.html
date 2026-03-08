@@ -1,48 +1,83 @@
-async function sendMessage() {
-    const text = userInput.value.trim();
-    if (text === "") return;
+from flask import Flask, render_template, request, jsonify
+import httpx
+import json
+import asyncio
+from datetime import datetime
+from parsel import Selector
 
-    // إظهار رسالة المستخدم في الموقع
-    addMessage("user-msg", `root@grod:~# analyze --target ${text}`);
+app = Flask(__name__)
 
-    // إظهار لوق التحليل (مثل الأفلام)
-    const logDiv = addMessage("bot-msg", "> Initializing OSINT protocols...\n> Bypassing TikTok region locks...\n> Extracting metadata...");
-    
-    try {
-        const response = await fetch('/analyze', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({username: text})
-        });
-        const data = await response.json();
+# --- قاموس الدول كما في كودك ---
+COUNTRIES = {"IQ": "العراق 🇮🇶", "SA": "السعودية 🇸🇦", "EG": "مصر 🇪🇬", "AE": "الإمارات 🇦🇪", "BH": "البحرين 🇧🇭", "KW": "الكويت 🇰🇼"}
 
-        if(data.status === "success") {
-            setTimeout(() => {
-                typeEffect(logDiv, `
-[SUCCESS] البيانات المستخرجة:
--------------------------
-الحساب: ${data.username}
-الدولة: ${data.country}
-المتابعين: ${data.followers}
-التقييم: ${data.quality}
--------------------------
-تم إنهاء العملية بنجاح.`);
-            }, 1500);
-        } else {
-            typeEffect(logDiv, "[ERROR] فشل الوصول للحساب. تأكد من اليوزر.");
-        }
-    } catch (e) {
-        addMessage("bot-msg", "[FATAL ERROR] Connection lost.");
+# --- دالة حساب عمر الحساب ---
+def calculate_account_age(creation_date_str):
+    try:
+        if creation_date_str == "غير معروف": return "غير معروف"
+        creation_date = datetime.strptime(creation_date_str, "%Y-%m-%d %H:%M:%S")
+        delta = datetime.now() - creation_date
+        years, months, days = delta.days // 365, (delta.days % 365) // 30, (delta.days % 365) % 30
+        return f"{years} سنة، {months} شهر" if years > 0 else f"{months} شهر، {days} يوم"
+    except: return "غير معروف"
+
+# --- دالة تحليل الجودة ---
+def analyze_quality(followers, likes, videos):
+    try:
+        f, l, v = int(str(followers)), int(str(likes)), int(str(videos))
+        size = "💎 هامور" if f > 1000000 else "🔥 مؤثر" if f > 100000 else "👤 شخصي"
+        quality = "🚀 متفاعل جداً" if v > 0 and l > f * 5 else "⚖️ طبيعي"
+        return f"{size} | {quality}"
+    except: return "غير محدد"
+
+# --- المحرك الرئيسي للهجوم والجلب ---
+async def fetch_tiktok_vip(target):
+    username = target.strip().replace('@', '').split('/')[-1]
+    url = f"https://www.tiktok.com/@{username}"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36",
+        "Accept-Language": "ar-SA,ar;q=0.9"
     }
-    
-    userInput.value = "";
-}
 
-function addMessage(type, text) {
-    const div = document.createElement('div');
-    div.className = `message ${type}`;
-    div.textContent = text;
-    chatBox.appendChild(div);
-    chatBox.scrollTop = chatBox.scrollHeight;
-    return div;
-}
+    async with httpx.AsyncClient(headers=headers, timeout=25.0) as client:
+        try:
+            response = await client.get(url)
+            selector = Selector(response.text)
+            script_data = selector.xpath("//script[@id='__UNIVERSAL_DATA_FOR_REHYDRATION__']/text()").get()
+            if not script_data: return None
+            
+            data = json.loads(script_data)
+            user_info = data.get("__DEFAULT_SCOPE__", {}).get("webapp.user-detail", {}).get("userInfo", {})
+            user = user_info.get("user", {})
+            stats = user_info.get("stats", {})
+
+            if not user: return None
+
+            create_date = datetime.fromtimestamp(user.get("createTime", 0)).strftime("%Y-%m-%d %H:%M:%S") if user.get("createTime", 0) > 0 else "غير معروف"
+
+            return {
+                "name": user.get("nickname"),
+                "username": user.get("uniqueId"),
+                "followers": f"{stats.get('followerCount', 0):,}",
+                "likes": f"{stats.get('heart', 0):,}",
+                "videos": f"{stats.get('videoCount', 0):,}",
+                "country": COUNTRIES.get(user.get("region", ""), user.get("region", "غير محدد")),
+                "age": calculate_account_age(create_date),
+                "quality": analyze_quality(stats.get('followerCount', 0), stats.get('heart', 0), stats.get('videoCount', 0)),
+                "verified": "نعم ✅" if user.get("verified") else "لا ❌",
+                "avatar": user.get("avatarLarger")
+            }
+        except: return None
+
+@app.route('/')
+def home(): return render_template('index.html')
+
+@app.route('/analyze', methods=['POST'])
+def analyze():
+    target = request.json.get('username')
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    result = loop.run_until_complete(fetch_tiktok_vip(target))
+    return jsonify(result) if result else jsonify({"error": "Not Found"})
+
+if __name__ == '__main__':
+    app.run(debug=True)
