@@ -3,22 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SAIF PLUS AI - Vision Fixed</title>
+    <title>SAIF PLUS AI - Professional Vision</title>
     <style>
         :root { --bg: #000; --red: #ff0000; --glow: 0 0 15px #ff0000; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: var(--bg); color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        .mobile-wrapper { width: 100%; max-width: 400px; height: 95vh; border: 2px solid var(--red); box-shadow: var(--glow); display: flex; flex-direction: column; border-radius: 10px; background: #000; }
-        .header-main { background: rgba(255, 0, 0, 0.1); border-bottom: 1px solid var(--red); padding: 10px; text-align: center; }
-        .brand-name { color: var(--red); font-weight: bold; font-size: 1.4rem; text-shadow: var(--glow); display: block; }
+        .mobile-wrapper { width: 100%; max-width: 400px; height: 95vh; border: 2px solid var(--red); box-shadow: var(--glow); display: flex; flex-direction: column; border-radius: 10px; background: #000; position: relative; }
+        .header-main { background: rgba(255, 0, 0, 0.1); border-bottom: 1px solid var(--red); padding: 12px; text-align: center; }
+        .brand-name { color: var(--red); font-weight: bold; font-size: 1.5rem; text-shadow: var(--glow); }
         #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
         .msg { max-width: 85%; padding: 12px; border-radius: 8px; font-size: 14px; line-height: 1.5; }
         .received { align-self: flex-start; background: rgba(255,0,0,0.1); border: 1px solid var(--red); }
         .sent { align-self: flex-end; background: var(--red); color: white; }
-        .msg img { max-width: 100%; border-radius: 5px; margin-top: 5px; display: block; }
-        .input-bar { display: flex; align-items: center; border-top: 1px solid rgba(255,0,0,0.3); padding: 5px; }
-        #uInput { flex: 1; background: transparent; border: none; padding: 12px; color: white; outline: none; }
-        .icon-btn { background: transparent; border: none; color: var(--red); font-size: 20px; cursor: pointer; padding: 10px; }
+        .msg img { max-width: 100%; border-radius: 5px; margin-top: 8px; display: block; border: 1px solid rgba(255,255,255,0.2); }
+        .input-bar { display: flex; align-items: center; border-top: 1px solid rgba(255,0,0,0.3); padding: 8px; background: #080000; }
+        #uInput { flex: 1; background: transparent; border: none; padding: 10px; color: white; outline: none; }
+        .icon-btn { background: transparent; border: none; color: var(--red); font-size: 22px; cursor: pointer; padding: 8px; transition: 0.2s; }
+        .icon-btn:active { transform: scale(0.9); }
         #file-input { display: none; }
     </style>
 </head>
@@ -28,10 +29,10 @@
         <div class="header-main"><span class="brand-name">SAIF AI</span></div>
         <div id="chat-box"></div>
         <div class="input-bar">
-            <input type="file" id="file-input" accept="image/*" onchange="handleImage(this)">
+            <input type="file" id="file-input" accept="image/*" onchange="handleImageSelection(this)">
             <button class="icon-btn" onclick="document.getElementById('file-input').click()">📎</button>
-            <input type="text" id="uInput" placeholder="اسأل عن الصورة..." onkeypress="if(event.key==='Enter') send()">
-            <button class="icon-btn" onclick="send()">➤</button>
+            <input type="text" id="uInput" placeholder="اسأل عن الصورة..." onkeypress="if(event.key==='Enter') startChat()">
+            <button class="icon-btn" onclick="startChat()">➤</button>
         </div>
     </div>
 
@@ -40,68 +41,71 @@
         const ID = '1565935868';
         const GK = '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';
         
-        let brain = [{ role: "system", content: "أنت SAIF PLUS AI مساعد ذكي بلهجة خليجية." }];
-        let currentImg = null;
+        let messagesHistory = [{ role: "system", content: "أنت SAIF PLUS AI مساعد ذكي بلهجة خليجية خبير في تحليل الصور والبيانات." }];
+        let pendingImage = null;
 
-        function handleImage(input) {
+        // معالجة اختيار الصورة وضغطها
+        function handleImageSelection(input) {
             const file = input.files[0];
             if (!file) return;
 
             const reader = new FileReader();
             reader.onload = function(e) {
-                // تصغير حجم الصورة باستخدام Canvas لضمان قبولها في الـ API
                 const img = new Image();
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
-                    const max_size = 800; // تصغير العرض لـ 800 بكسل
+                    const ctx = canvas.getContext('2d');
+                    const MAX_WIDTH = 700; // حجم مثالي للرؤية
                     let width = img.width;
                     let height = img.height;
 
-                    if (width > height) { if (width > max_size) { height *= max_size / width; width = max_size; } }
-                    else { if (height > max_size) { width *= max_size / height; height = max_size; } }
-
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
                     canvas.width = width;
                     canvas.height = height;
-                    const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    currentImg = canvas.toDataURL('image/jpeg', 0.7); // ضغط الجودة لـ 70%
-
+                    
+                    pendingImage = canvas.toDataURL('image/jpeg', 0.6); // ضغط الجودة لتقليل الحجم
+                    
                     const box = document.getElementById('chat-box');
-                    box.innerHTML += `<div class="msg sent"><i>يتم الآن تحليل الصورة...</i><br><img src="${currentImg}"></div>`;
+                    box.innerHTML += `<div class="msg sent"><i>جاري إرسال الصورة للتحليل...</i><br><img src="${pendingImage}"></div>`;
                     box.scrollTop = box.scrollHeight;
-                    send(); // إرسال تلقائي
+                    
+                    startChat(); // إرسال تلقائي
                 };
                 img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         }
 
-        async function send() {
+        async function startChat() {
             const input = document.getElementById('uInput');
             const box = document.getElementById('chat-box');
-            const text = input.value.trim();
-            const imageToSend = currentImg;
-            
-            if (!text && !imageToSend) return;
+            const userText = input.value.trim();
+            const imageToUpload = pendingImage;
 
-            if (text && !imageToSend) {
-                box.innerHTML += `<div class="msg sent">${text}</div>`;
+            if (!userText && !imageToUpload) return;
+
+            if (userText && !imageToUpload) {
+                box.innerHTML += `<div class="msg sent">${userText}</div>`;
             }
 
+            // تصفير المدخلات فوراً لمنع التكرار
             input.value = "";
-            currentImg = null; // تصفير الصورة المختارة
+            pendingImage = null;
             document.getElementById('file-input').value = "";
             box.scrollTop = box.scrollHeight;
 
-            // تجهيز محتوى الرسالة المتوافق مع موديل Vision
-            let content = [];
-            if (text) content.push({ type: "text", text: text });
-            else if (imageToSend) content.push({ type: "text", text: "قم بوصف هذه الصورة بالتفصيل." });
-
-            if (imageToSend) {
-                content.push({
+            // بناء هيكل الرسالة المتوافق مع موديل Vision
+            let contentArray = [];
+            if (userText) contentArray.push({ type: "text", text: userText });
+            if (imageToUpload) {
+                if (!userText) contentArray.push({ type: "text", text: "قم بتحليل هذه الصورة بدقة واشرح ما تراه بلهجة خليجية." });
+                contentArray.push({
                     type: "image_url",
-                    image_url: { url: imageToSend }
+                    image_url: { url: imageToUpload }
                 });
             }
 
@@ -111,30 +115,31 @@
                     headers: { "Authorization": `Bearer ${GK}`, "Content-Type": "application/json" },
                     body: JSON.stringify({
                         model: "llama-3.2-11b-vision-preview",
-                        messages: [...brain, { role: "user", content: content }],
-                        temperature: 0.7,
-                        max_tokens: 1024
+                        messages: [...messagesHistory, { role: "user", content: contentArray }],
+                        temperature: 0.5,
+                        max_tokens: 800
                     })
                 });
 
-                const data = await response.json();
+                const result = await response.json();
                 
-                if (data.choices && data.choices[0]) {
-                    const reply = data.choices[0].message.content;
-                    box.innerHTML += `<div class="msg received">${reply}</div>`;
-                    brain.push({ role: "user", content: text || "صورة مرسلة" });
-                    brain.push({ role: "assistant", content: reply });
+                if (result.choices && result.choices[0]) {
+                    const aiReply = result.choices[0].message.content;
+                    box.innerHTML += `<div class="msg received">${aiReply}</div>`;
+                    // حفظ السياق للنص فقط لتقليل حجم الذاكرة
+                    messagesHistory.push({ role: "user", content: userText || "صورة مرسلة" });
+                    messagesHistory.push({ role: "assistant", content: aiReply });
                 } else {
-                    throw new Error("Invalid Response");
+                    throw new Error("Invalid response from API");
                 }
-            } catch (e) {
-                box.innerHTML += `<div class="msg received">❌ عذراً، لم أستطع قراءة الصورة. تأكد من جودة الإنترنت أو حاول مرة أخرى.</div>`;
+            } catch (error) {
+                box.innerHTML += `<div class="msg received">❌ حدث خطأ في التواصل مع خبير الرؤية. يرجى المحاولة مرة أخرى بصورة أصغر.</div>`;
             }
             box.scrollTop = box.scrollHeight;
         }
 
         window.onload = () => {
-            document.getElementById('chat-box').innerHTML = `<div class="msg received">👋 أهلاً بك يا <b>أسامة</b>. أرسل أي صورة وسأقوم بتحليلها لك فوراً.</div>`;
+            document.getElementById('chat-box').innerHTML = `<div class="msg received">أهلاً بك يا <b>أسامة</b>. أرسل صورتك الآن وسأقوم بتحليل محتواها فوراً 📎</div>`;
         };
     </script>
 </body>
