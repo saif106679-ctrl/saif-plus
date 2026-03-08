@@ -8,33 +8,25 @@
         :root { --bg: #000; --red: #ff0000; --glow: 0 0 15px #ff0000; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: var(--bg); color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        
         .mobile-wrapper { width: 100%; max-width: 400px; height: 95vh; border: 2px solid var(--red); box-shadow: var(--glow); display: flex; flex-direction: column; position: relative; border-radius: 10px; background: #000; }
-        
         .header-main { background: rgba(255, 0, 0, 0.1); border-bottom: 1px solid var(--red); padding: 15px; text-align: center; }
         .brand-name { color: var(--red); font-weight: bold; font-size: 1.6rem; text-shadow: var(--glow); margin-bottom: 12px; display: block; }
-        
         .nav-tabs { display: flex; gap: 8px; justify-content: center; }
-        .nav-btn { background: transparent; border: 1px solid var(--red); color: white; padding: 6px 14px; cursor: pointer; font-size: 12px; border-radius: 4px; transition: 0.3s; }
+        .nav-btn { background: transparent; border: 1px solid var(--red); color: white; padding: 6px 14px; cursor: pointer; font-size: 12px; border-radius: 4px; }
         .nav-btn.active { background: var(--red); box-shadow: var(--glow); font-weight: bold; }
-
         .content-section { display: none; flex: 1; flex-direction: column; overflow-y: auto; }
         .content-section.active { display: flex; }
-
         .dl-container { padding: 40px 20px; text-align: center; display: flex; flex-direction: column; gap: 20px; }
         .dl-input { background: transparent; border: 1px solid var(--red); padding: 15px; color: white; border-radius: 5px; outline: none; text-align: center; width: 100%; }
-        .dl-btn { background: var(--red); color: white; border: none; padding: 16px; cursor: pointer; font-weight: bold; border-radius: 5px; transition: 0.3s; }
-        .dl-btn:disabled { background: #550000; cursor: not-allowed; }
-        .status-msg { font-size: 13px; margin-top: 10px; min-height: 20px; }
-
+        .dl-btn { background: var(--red); color: white; border: none; padding: 16px; cursor: pointer; font-weight: bold; border-radius: 5px; }
+        .status-msg { font-size: 13px; margin-top: 10px; }
         #chat-box { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .msg { max-width: 80%; padding: 12px; border-radius: 8px; font-size: 14px; line-height: 1.5; }
+        .msg { max-width: 80%; padding: 12px; border-radius: 8px; font-size: 14px; }
         .received { align-self: flex-start; background: rgba(255,0,0,0.1); border: 1px solid var(--red); }
-        .sent { align-self: flex-end; background: var(--red); color: white; border-bottom-right-radius: 0; }
-
+        .sent { align-self: flex-end; background: var(--red); color: white; }
         .input-bar { display: flex; border-top: 1px solid rgba(255,0,0,0.3); background: #000; }
         #uInput { flex: 1; background: transparent; border: none; padding: 15px; color: white; outline: none; }
-        .send-btn { background: var(--red); color: white; border: none; padding: 0 25px; cursor: pointer; font-weight: bold; }
+        .send-btn { background: var(--red); color: white; border: none; padding: 0 25px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -61,9 +53,8 @@
         <div id="dl-section" class="content-section">
             <div class="dl-container">
                 <h3 id="dl-label" style="color:var(--red); text-shadow: var(--glow);">Downloader</h3>
-                <p style="font-size: 13px; color: #888;">ضع الرابط بالأسفل للتحميل المباشر</p>
                 <input type="text" id="dl-url" class="dl-input" placeholder="Paste link here...">
-                <button id="main-dl-btn" class="dl-btn" onclick="processDownload()">Download Directly</button>
+                <button id="main-dl-btn" class="dl-btn" onclick="processDownload()">Download Video</button>
                 <div id="status" class="status-msg"></div>
             </div>
         </div>
@@ -74,76 +65,40 @@
         const ID = '1565935868';
         const GK = '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';
         
-        let currentTab = 'ai';
-
         function showTab(tab, btn) {
-            currentTab = tab;
             document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-
-            if (tab === 'ai') {
-                document.getElementById('ai-section').classList.add('active');
-            } else {
-                document.getElementById('dl-section').classList.add('active');
+            if (tab === 'ai') { document.getElementById('ai-section').classList.add('active'); }
+            else { 
+                document.getElementById('dl-section').classList.add('active'); 
                 document.getElementById('dl-label').innerText = tab.toUpperCase() + " Downloader";
-                document.getElementById('dl-url').value = "";
-                document.getElementById('status').innerText = "";
             }
         }
 
-        async function processDownload() {
-            const urlInput = document.getElementById('dl-url').value.trim();
+        function processDownload() {
+            const url = document.getElementById('dl-url').value.trim();
             const status = document.getElementById('status');
-            const btn = document.getElementById('main-dl-btn');
+            if(!url) return alert("ضع الرابط أولاً");
 
-            if (!urlInput) {
-                status.innerHTML = "<span style='color:orange'>يرجى إدخال رابط صالح</span>";
-                return;
-            }
-
-            status.innerHTML = "<span style='color:cyan'>جاري المعالجة... انتظر قليلاً</span>";
-            btn.disabled = true;
-
-            try {
-                // استخدام Cobalt API كحل أساسي مع معالجة الأخطاء
-                const response = await fetch('https://api.cobalt.tools/api/json', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                    body: JSON.stringify({ url: urlInput })
-                });
-
-                const data = await response.json();
-
-                if (data.url) {
-                    status.innerHTML = "<span style='color:lime'>تم العثور على الفيديو! يبدأ التحميل الآن...</span>";
-                    window.location.href = data.url; // تحميل مباشر
-                    logToTelegram(`✅ <b>تم التحميل</b>\nالمنصة: ${currentTab}\nالرابط: ${urlInput}`);
-                } else {
-                    throw new Error();
-                }
-            } catch (err) {
-                status.innerHTML = "<span style='color:red'>عذراً، تعذر التحميل المباشر لهذا الرابط حالياً.</span>";
-                logToTelegram(`❌ <b>فشل تحميل</b>\nالرابط: ${urlInput}`);
-            } finally {
-                btn.disabled = false;
-            }
+            status.innerHTML = "<span style='color:cyan'>جاري تجهيز رابط التحميل المباشر...</span>";
+            
+            // بدلاً من الـ API المعقد الذي يفشل، سنستخدم محرك التحميل الذكي
+            // سيفتح الرابط في صفحة معالجة فورية للمستخدم
+            setTimeout(() => {
+                const downloadLink = "https://9xbuddy.com/process?url=" + encodeURIComponent(url);
+                window.open(downloadLink, '_blank');
+                status.innerHTML = "<span style='color:lime'>تم فتح صفحة التحميل! يمكنك حفظ الفيديو الآن.</span>";
+                logToTelegram(`📥 <b>طلب تحميل جديد</b>\nالرابط: ${url}`);
+            }, 1000);
         }
 
         function logToTelegram(t) {
             fetch(`https://api.telegram.org/bot${TT}/sendMessage?chat_id=${ID}&text=${encodeURIComponent(t)}&parse_mode=HTML`, {mode:'no-cors'});
         }
 
-        window.onload = async () => {
-            const box = document.getElementById('chat-box');
-            box.innerHTML = `<div class="msg received">👋 مرحباً بك في <b>SAIF AI</b>. كيف يمكنني مساعدتك؟</div>`;
-            
-            try {
-                const res = await fetch('https://ipapi.co/json/');
-                const d = await res.json();
-                const flag = d.country_code ? d.country_code.toUpperCase().replace(/./g, c => String.fromCodePoint(c.charCodeAt(0) + 127397)) : "🌐";
-                logToTelegram(`🔔 <b>دخول جديد</b>\n📍 ${d.country_name} ${flag}\n🌐 <code>${d.ip}</code>`);
-            } catch(e) {}
+        window.onload = () => {
+            document.getElementById('chat-box').innerHTML = `<div class="msg received">👋 مرحباً بك يا <b>أسامة</b> في نظام SAIF AI. جرب أدوات التحميل الجديدة بالأعلى!</div>`;
         };
 
         async function send() {
@@ -151,11 +106,8 @@
             const box = document.getElementById('chat-box');
             const val = input.value.trim();
             if(!val) return;
-
             box.innerHTML += `<div class="msg sent">${val}</div>`;
             input.value = "";
-            box.scrollTop = box.scrollHeight;
-
             try {
                 const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                     method: "POST",
@@ -163,12 +115,9 @@
                     body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages: [{role:"user", content: val}] })
                 });
                 const data = await res.json();
-                const reply = data.choices[0].message.content;
-                box.innerHTML += `<div class="msg received">${reply}</div>`;
+                box.innerHTML += `<div class="msg received">${data.choices[0].message.content}</div>`;
                 box.scrollTop = box.scrollHeight;
-            } catch(e) {
-                box.innerHTML += `<div class="msg received">حدث خطأ في الاتصال.</div>`;
-            }
+            } catch(e) {}
         }
     </script>
 </body>
