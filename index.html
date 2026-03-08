@@ -17,7 +17,7 @@ justify-content:center;
 align-items:center;
 height:100vh;
 margin:0;
-color:#00ff9c;
+color:#ff0033;
 }
 
 /* صندوق الدردشة */
@@ -25,12 +25,12 @@ color:#00ff9c;
 .chat-container{
 width:360px;
 height:600px;
-border:2px solid #00ff9c;
+border:2px solid #ff0033;
 border-radius:10px;
 display:flex;
 flex-direction:column;
 overflow:hidden;
-box-shadow:0 0 20px #00ff9c;
+box-shadow:0 0 20px #ff0033;
 }
 
 /* العنوان */
@@ -38,7 +38,7 @@ box-shadow:0 0 20px #00ff9c;
 .header{
 text-align:center;
 padding:10px;
-border-bottom:1px solid #00ff9c;
+border-bottom:1px solid #ff0033;
 font-size:20px;
 }
 
@@ -48,6 +48,8 @@ font-size:20px;
 flex:1;
 padding:10px;
 overflow-y:auto;
+display:flex;
+flex-direction:column;
 }
 
 /* الرسالة */
@@ -62,14 +64,14 @@ max-width:80%;
 /* رسالة المستخدم */
 
 .user{
-background:#003b2a;
+background:#3b0008;
 align-self:flex-end;
 }
 
 /* رسالة الذكاء */
 
 .ai{
-background:#001a13;
+background:#1a0003;
 align-self:flex-start;
 }
 
@@ -77,7 +79,7 @@ align-self:flex-start;
 
 .input-area{
 display:flex;
-border-top:1px solid #00ff9c;
+border-top:1px solid #ff0033;
 }
 
 input{
@@ -85,11 +87,12 @@ flex:1;
 padding:10px;
 background:black;
 border:none;
-color:#00ff9c;
+color:#ff0033;
+outline:none;
 }
 
 button{
-background:#00ff9c;
+background:#ff0033;
 border:none;
 padding:10px 15px;
 cursor:pointer;
@@ -110,8 +113,7 @@ SAIF AI
 <div class="chat" id="chat">
 
 <div class="message ai">
-مرحبا 👋  
-أنا SAIF AI كيف يمكنني مساعدتك؟
+👋 مرحبا أنا SAIF AI كيف يمكنني مساعدتك؟
 </div>
 
 </div>
@@ -128,7 +130,9 @@ SAIF AI
 
 <script>
 
-function send(){
+const API_KEY="PUT_GROQ_KEY_HERE"
+
+async function send(){
 
 let input=document.getElementById("msg")
 let text=input.value
@@ -141,16 +145,36 @@ chat.innerHTML+=`
 <div class="message user">${text}</div>
 `
 
-/* رد تجريبي */
-
-setTimeout(()=>{
-chat.innerHTML+=`
-<div class="message ai">تم استلام الرسالة</div>
-`
 chat.scrollTop=chat.scrollHeight
-},500)
 
 input.value=""
+
+let response=await fetch("https://api.groq.com/openai/v1/chat/completions",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"Authorization":"Bearer "+API_KEY
+},
+body:JSON.stringify({
+model:"llama3-70b-8192",
+messages:[
+{
+role:"user",
+content:text
+}
+]
+})
+})
+
+let data=await response.json()
+
+let reply=data.choices[0].message.content
+
+chat.innerHTML+=`
+<div class="message ai">${reply}</div>
+`
+
+chat.scrollTop=chat.scrollHeight
 
 }
 
