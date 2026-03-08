@@ -1,208 +1,48 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grod | TikTok Analyzer</title>
-    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --hacker-green: #00ff41;
-            --dark-bg: #0d0208;
-            --terminal-gray: #1a1a1a;
+async function sendMessage() {
+    const text = userInput.value.trim();
+    if (text === "") return;
+
+    // إظهار رسالة المستخدم في الموقع
+    addMessage("user-msg", `root@grod:~# analyze --target ${text}`);
+
+    // إظهار لوق التحليل (مثل الأفلام)
+    const logDiv = addMessage("bot-msg", "> Initializing OSINT protocols...\n> Bypassing TikTok region locks...\n> Extracting metadata...");
+    
+    try {
+        const response = await fetch('/analyze', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({username: text})
+        });
+        const data = await response.json();
+
+        if(data.status === "success") {
+            setTimeout(() => {
+                typeEffect(logDiv, `
+[SUCCESS] البيانات المستخرجة:
+-------------------------
+الحساب: ${data.username}
+الدولة: ${data.country}
+المتابعين: ${data.followers}
+التقييم: ${data.quality}
+-------------------------
+تم إنهاء العملية بنجاح.`);
+            }, 1500);
+        } else {
+            typeEffect(logDiv, "[ERROR] فشل الوصول للحساب. تأكد من اليوزر.");
         }
-
-        body, html {
-            margin: 0;
-            padding: 0;
-            background-color: var(--dark-bg);
-            color: var(--hacker-green);
-            font-family: 'Courier Prime', monospace;
-            height: 100%;
-            overflow: hidden;
-        }
-
-        /* تأثير مصفوفة خفيف في الخلفية */
-        .matrix-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.9)), 
-                        url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
-            z-index: -1;
-        }
-
-        .chat-container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            max-width: 600px;
-            margin: 0 auto;
-            border-left: 1px solid #003b00;
-            border-right: 1px solid #003b00;
-        }
-
-        .header {
-            padding: 15px;
-            background: var(--terminal-gray);
-            border-bottom: 2px solid var(--hacker-green);
-            text-align: center;
-            font-weight: bold;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        .chat-box {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .message {
-            max-width: 85%;
-            padding: 10px 15px;
-            border-radius: 5px;
-            line-height: 1.5;
-            position: relative;
-            font-size: 14px;
-        }
-
-        .bot-msg {
-            align-self: flex-start;
-            background: rgba(0, 255, 65, 0.1);
-            border-right: 3px solid var(--hacker-green);
-        }
-
-        .user-msg {
-            align-self: flex-end;
-            background: var(--terminal-gray);
-            border-left: 3px solid #fff;
-            color: #fff;
-        }
-
-        .input-area {
-            padding: 15px;
-            background: var(--terminal-gray);
-            display: flex;
-            gap: 10px;
-        }
-
-        input {
-            flex: 1;
-            background: #000;
-            border: 1px solid var(--hacker-green);
-            color: var(--hacker-green);
-            padding: 12px;
-            font-family: inherit;
-            outline: none;
-        }
-
-        button {
-            background: var(--hacker-green);
-            color: #000;
-            border: none;
-            padding: 0 20px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        button:hover {
-            background: #00cc33;
-            box-shadow: 0 0 10px var(--hacker-green);
-        }
-
-        /* تأثير النبض لاسم الموقع */
-        .blink {
-            animation: blinker 1.5s linear infinite;
-        }
-
-        @keyframes blinker {
-            50% { opacity: 0; }
-        }
-
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: var(--hacker-green); }
-    </style>
-</head>
-<body>
-
-<div class="matrix-bg"></div>
-
-<div class="chat-container">
-    <div class="header">
-        <span class="blink">[</span> GROD ANALYZER <span class="blink">]</span>
-    </div>
-
-    <div class="chat-box" id="chatBox">
-        </div>
-
-    <div class="input-area">
-        <input type="text" id="userInput" placeholder="root@tiktok:~# " autocomplete="off">
-        <button onclick="sendMessage()">RUN</button>
-    </div>
-</div>
-
-<script>
-    const chatBox = document.getElementById('chatBox');
-    const userInput = document.getElementById('userInput');
-
-    // دالة محاكاة الكتابة التدريجية
-    function typeEffect(element, text, speed = 40) {
-        let i = 0;
-        element.innerHTML = "";
-        let interval = setInterval(() => {
-            if (i < text.length) {
-                element.innerHTML += text.charAt(i);
-                i++;
-                chatBox.scrollTop = chatBox.scrollHeight;
-            } else {
-                clearInterval(interval);
-            }
-        }, speed);
+    } catch (e) {
+        addMessage("bot-msg", "[FATAL ERROR] Connection lost.");
     }
+    
+    userInput.value = "";
+}
 
-    // رسالة الترحيب عند البدء
-    window.onload = () => {
-        const welcomeDiv = document.createElement('div');
-        welcomeDiv.className = 'message bot-msg';
-        chatBox.appendChild(welcomeDiv);
-        typeEffect(welcomeDiv, "Welcome to Grod System v1.0...\nمرحباً فيك في Grod لتحليل الحسابات.\nأرسل اسم حساب التيك توك المستهدف (Username).");
-    };
-
-    function sendMessage() {
-        const text = userInput.value.trim();
-        if (text === "") return;
-
-        // رسالة المستخدم
-        const userDiv = document.createElement('div');
-        userDiv.className = 'message user-msg';
-        userDiv.textContent = text;
-        chatBox.appendChild(userDiv);
-
-        userInput.value = "";
-
-        // محاكاة استجابة "الهكر" للتحليل
-        setTimeout(() => {
-            const botDiv = document.createElement('div');
-            botDiv.className = 'message bot-msg';
-            chatBox.appendChild(botDiv);
-            
-            const responseText = `> جاري اختراق قاعدة بيانات التيك توك...\n> استخراج بيانات الحساب: @${text}\n> الحالة: متاح للتحليل.\n> جاري تشغيل خوارزمية التقييم...`;
-            typeEffect(botDiv, responseText);
-        }, 1000);
-    }
-
-    // الإرسال عند الضغط على Enter
-    userInput.addEventListener("keypress", (event) => {
-        if (event.key === "Enter") sendMessage();
-    });
-</script>
-
-</body>
-</html>
+function addMessage(type, text) {
+    const div = document.createElement('div');
+    div.className = `message ${type}`;
+    div.textContent = text;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    return div;
+}
