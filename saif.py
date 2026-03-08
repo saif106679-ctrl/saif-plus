@@ -1,25 +1,20 @@
 import asyncio
 import json
 import logging
-import httpx  # مكتبة لإرسال الطلبات للمواقع
-from datetime import datetime  # لمعالجة التواريخ والوقت
+import httpx
+from datetime import datetime
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
 from aiogram.types import Message, BufferedInputFile
-from parsel import Selector  # مكتبة استخراج النصوص من HTML
+from parsel import Selector
 
 # ==========================================
 # ⚙️ إعدادات البوت
 # ==========================================
-# 🔴 التوكن الخاص بك تم وضعه هنا
 TOKEN = "8502902855:AAEZAMUR2A9i2IsvseBlentxZZjH2CZs100"
 
-# تفعيل نظام التسجيل لمراقبة الأخطاء
 logging.basicConfig(level=logging.INFO)
 
-# ==========================================
-# 🌍 قاموس الدول (Database)
-# ==========================================
 COUNTRIES = {
     "IQ": "العراق 🇮🇶", "SA": "السعودية 🇸🇦", "EG": "مصر 🇪🇬", "AE": "الإمارات 🇦🇪",
     "KW": "الكويت 🇰🇼", "QA": "قطر 🇶🇦", "BH": "البحرين 🇧🇭", "OM": "عمان 🇴🇲",
@@ -31,7 +26,7 @@ COUNTRIES = {
 }
 
 # ==========================================
-# 🛠️ دوال التحليل (Logic Functions)
+# 🛠️ دوال التحليل
 # ==========================================
 
 def calculate_account_age(creation_date_str):
@@ -47,7 +42,8 @@ def calculate_account_age(creation_date_str):
         if months > 0: parts.append(f"{months} شهر")
         if days > 0: parts.append(f"{days} يوم")
         return "، ".join(parts) if parts else "جديد جداً"
-    except: return "غير معروف"
+    except Exception:
+        return "غير معروف"
 
 def analyze_quality(followers, likes, videos):
     try:
@@ -62,10 +58,11 @@ def analyze_quality(followers, likes, videos):
         elif l > f * 2: quality_tag = "✅ تفاعل ممتاز (جمهور حقيقي)"
         else: quality_tag = "⚖️ تفاعل طبيعي"
         return f"{size_tag} | {quality_tag}"
-    except: return "غير محدد"
+    except Exception:
+        return "غير محدد"
 
 # ==========================================
-# 🕵️‍♂️ المحرك الرئيسي (Core Scraper)
+# 🕵️‍♂️ المحرك الرئيسي (OSINT Core)
 # ==========================================
 async def fetch_tiktok_vip(username_or_url):
     target = username_or_url.strip()
@@ -74,23 +71,41 @@ async def fetch_tiktok_vip(username_or_url):
     if not target.startswith("@"): target = f"@{target.replace('https://www.tiktok.com/', '')}"
     username = target.lstrip("@")
     url = f"https://www.tiktok.com/@{username}"
+    
     headers = {
         "User-Agent": "Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
         "Referer": "https://www.tiktok.com/",
         "Accept-Language": "ar-SA,ar;q=0.9,en;q=0.8"
     }
+
     async with httpx.AsyncClient(headers=headers, timeout=25.0) as client:
         try:
             response = await client.get(url)
             selector = Selector(response.text)
             script_data = selector.xpath("//script[@id='__UNIVERSAL_DATA_FOR_REHYDRATION__']/text()").get() or \
                           selector.xpath("//script[@id='SIGI_STATE']/text()").get()
+            
             if not script_data: return None
+            
             data = json.loads(script_data)
             user_info = {}
             if "__DEFAULT_SCOPE__" in data:
                 user_info = data["__DEFAULT_SCOPE__"].get("webapp.user-detail", {}).get("userInfo", {})
             if not user_info:
                  user_info = data.get("UserModule", {}).get("users", {}).get(username, {})
-            user = user_info
+            
+            user = user_info.get("user", {})
+            stats = user_info.get("stats", {})
+            
+            if not user: return None
+
+            region_code = user.get("region", "").upper()
+            country_name = COUNTRIES.get(region_code, f"{region_code}")
+            final_country = country_name if region_code in COUNTRIES else (f"{region_code} 🌐" if region_code else "غير محدد 🌐")
+            
+            def fmt_date(ts):
+                return datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S") if ts and ts > 0 else "غير معروف"
+            
+            create_date = fmt_date(user.get("createTime", 0))
+            followers = stats.get('followerCount',
