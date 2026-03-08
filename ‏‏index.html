@@ -1,0 +1,291 @@
+import asyncio
+import json
+import logging
+import httpx  # مكتبة لإرسال الطلبات للمواقع (مثل المتصفح)
+from datetime import datetime  # لمعالجة التواريخ والوقت
+from aiogram import Bot, Dispatcher, F
+from aiogram.filters import Command
+from aiogram.types import Message, BufferedInputFile
+from parsel import Selector  # مكتبة قوية لاستخراج النصوص من داخل كود الصفحة (HTML)
+
+# ==========================================
+# ⚙️ إعدادات البوت
+# ==========================================
+# 🔴 التوكن الخاص ببوتك
+TOKEN = "8502902855: AAEZAMUR2A9i2IsvseBlentxZZjH2CZs100"
+
+# تفعيل نظام التسجيل لمراقبة الأخطاء في التيرمينال
+logging.basicConfig(level=logging.INFO)
+
+# ==========================================
+# 🌍 قاموس الدول (Database)
+# ==========================================
+# # هذا القاموس وظيفته تحويل الرموز (Codes) التي تأتي من تيك توك إلى أسماء وعلامات.
+# # مثلاً تيك توك يرسل "IQ"، البوت يبحث هنا ويجد "العراق 🇮🇶".
+COUNTRIES = {
+    # الدول العربية
+    "IQ": "العراق 🇮🇶", "SA": "السعودية 🇸🇦", "EG": "مصر 🇪🇬", "AE": "الإمارات 🇦🇪",
+    "KW": "الكويت 🇰🇼", "QA": "قطر 🇶🇦", "BH": "البحرين 🇧🇭", "OM": "عمان 🇴🇲",
+    "YE": "اليمن 🇾🇪", "SY": "سوريا 🇸🇾", "LB": "لبنان 🇱🇧", "JO": "الأردن 🇯🇴",
+    "PS": "فلسطين 🇵🇸", "DZ": "الجزائر 🇩🇿", "MA": "المغرب 🇲🇦", "TN": "تونس 🇹🇳",
+    "LY": "ليبيا 🇱🇾", "SD": "السودان 🇸🇩", "SO": "الصومال 🇸🇴", "MR": "موريتانيا 🇲🇷",
+    
+    # دول العالم (أوروبا وأمريكا وآسيا...)
+    "US": "الولايات المتحدة 🇺🇸", "TR": "تركيا 🇹🇷", "DE": "ألمانيا 🇩🇪", "FR": "فرنسا 🇫🇷",
+    "GB": "بريطانيا 🇬🇧", "RU": "روسيا 🇷🇺", "CN": "الصين 🇨🇳", "IN": "الهند 🇮🇳",
+    # ... (تم اختصار القائمة لتوضيح الفكرة)
+}
+
+# ==========================================
+# 🛠️ دوال التحليل (Logic Functions)
+# ==========================================
+
+# # هذه الدالة تحسب عمر الحساب بدقة
+# # تأخذ تاريخ الإنشاء وتطرحه من تاريخ اليوم
+def calculate_account_age(creation_date_str):
+    try:
+        if creation_date_str == "غير معروف": return "غير معروف"
+        # تحويل النص إلى وقت حقيقي
+        creation_date = datetime.strptime(creation_date_str, "%Y-%m-%d %H:%M:%S")
+        # حساب الفرق (الآن - وقت الإنشاء)
+        delta = datetime.now() - creation_date
+        
+        # تقسيم الأيام إلى سنوات وشهور
+        years = delta.days // 365
+        months = (delta.days % 365) // 30
+        days = (delta.days % 365) % 30
+        
+        # تنسيق النتيجة كنص مقروء
+        parts = []
+        if years > 0: parts.append(f"{years} سنة")
+        if months > 0: parts.append(f"{months} شهر")
+        if days > 0: parts.append(f"{days} يوم")
+        return "، ".join(parts) if parts else "جديد جداً"
+    except: return "غير معروف"
+
+# # هذه الدالة تقيم "جودة" الحساب بناءً على الأرقام
+# # معادلات رياضية بسيطة لمعرفة هل الحساب وهمي أم مشهور
+def analyze_quality(followers, likes, videos):
+    try:
+        # إزالة الفواصل من الأرقام (مثل 1,000 تصبح 1000) للقدرة على الحساب
+        f = int(str(followers).replace(',', ''))
+        l = int(str(likes).replace(',', ''))
+        v = int(str(videos).replace(',', ''))
+        
+        # تصنيف الحجم بناءً على عدد المتابعين
+        if f > 1000000: size_tag = "💎 هوامير تيك توك"
+        elif f > 100000: size_tag = "🔥 مؤثر قوي"
+        else: size_tag = "👤 حساب شخصي نشط"
+
+        # تصنيف التفاعل (اللايكات مقارنة بالمتابعين)
+        if v == 0: quality_tag = "👻 صامت"
+        elif l > f * 10: quality_tag = "🚀 تفاعل متفجر (Viral)" # إذا اللايكات 10 أضعاف المتابعين
+        elif l > f * 2: quality_tag = "✅ تفاعل ممتاز (جمهور حقيقي)"
+        else: quality_tag = "⚖️ تفاعل طبيعي"
+
+        return f"{size_tag} | {quality_tag}"
+    except: return "غير محدد"
+
+# ==========================================
+# 🕵️‍♂️ المحرك الرئيسي (Core Scraper)
+# ==========================================
+async def fetch_tiktok_vip(username_or_url):
+    # # تنظيف الرابط واستخراج اليوزر فقط
+    target = username_or_url.strip()
+    if "tiktok.com" in target:
+        if "@" in target: target = target.split("@")[1].split("?")[0]
+    
+    if not target.startswith("@"): target = f"@{target.replace('https://www.tiktok.com/', '')}"
+    username = target.lstrip("@")
+    
+    # رابط الصفحة التي سنهاجمها (صفحة البروفايل)
+    url = f"https://www.tiktok.com/@{username}"
+    
+    # 🔥 المنطقة الحساسة (Headers Spoofing) 🔥
+    # # هنا نكذب على سيرفر تيك توك ونقول له "نحن هاتف أندرويد حقيقي"
+    # # وليس بوت بايثون. هذا ضروري جداً لكي يظهر لنا حقل "الدولة".
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Referer": "https://www.tiktok.com/",
+        "Accept-Language": "ar-SA,ar;q=0.9,en;q=0.8" # نطلب المحتوى بالعربي
+    }
+
+    # فتح اتصال آمن مع الموقع
+    async with httpx.AsyncClient(headers=headers, timeout=25.0) as client:
+        try:
+            response = await client.get(url)
+            
+            # # استخدام مكتبة Parsel لتحليل كود HTML
+            selector = Selector(response.text)
+            
+            # 🔥 استخراج الكنز (JSON Extraction) 🔥
+            # # تيك توك يخفي البيانات داخل وسم <script> مخفي في الصفحة.
+            # # نحن نبحث عن هذا الوسم بالتحديد ونسحب النص الذي بداخله.
+            script_data = selector.xpath("//script[@id='__UNIVERSAL_DATA_FOR_REHYDRATION__']/text()").get() or \
+                          selector.xpath("//script[@id='SIGI_STATE']/text()").get()
+            
+            if not script_data: return None
+
+            # تحويل النص المستخرج إلى بيانات برمجية (Dictionary)
+            data = json.loads(script_data)
+            
+            # # الدخول في عمق البيانات للوصول إلى تفاصيل المستخدم
+            # # هذه المسارات تتغير أحياناً، لذا وضعنا احتمالية أخرى
+            user_info = {}
+            if "__DEFAULT_SCOPE__" in data:
+                user_info = data["__DEFAULT_SCOPE__"].get("webapp.user-detail", {}).get("userInfo", {})
+            if not user_info:
+                 user_info = data.get("UserModule", {}).get("users", {}).get(username, {})
+
+            # فصلنا بيانات المستخدم عن بيانات الإحصائيات
+            user = user_info.get("user", {})
+            stats = user_info.get("stats", {})
+
+            if not user: return None
+
+            # --- 1. استخراج الدولة ---
+            # # نبحث عن المفتاح "region" الذي ظهر بفضل الهيدر الخاص بالأندرويد
+            region_code = user.get("region", "").upper()
+            country_name = COUNTRIES.get(region_code, f"{region_code}")
+            # تنسيق العرض النهائي للدولة
+            final_country = country_name if region_code in COUNTRIES else (f"{region_code} 🌐" if region_code else "غير محدد 🌐")
+
+            # --- 2. معالجة التواريخ ---
+            # # دالة صغيرة داخلية لتحويل الأرقام الزمنية (Timestamp) لتاريخ
+            def fmt_date(ts):
+                return datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S") if ts else "لم يتم التعديل"
+            
+            create_date = fmt_date(user.get("createTime", 0)) if user.get("createTime", 0) > 0 else "غير معروف"
+
+            # --- 3. إعدادات الخصوصية (Spy Mode) ---
+            # # الأرقام 0 تعني مفتوح للجميع، غير ذلك يعني مغلق أو للأصدقاء
+            dl_set = "للجميع 🌍" if user.get("downloadSetting", 0) == 0 else "مغلق 🚫"
+            duet_set = "للجميع 🌍" if user.get("duetSetting", 0) == 0 else "مغلق 🔒"
+            stitch_set = "للجميع 🌍" if user.get("stitchSetting", 0) == 0 else "مغلق 🔒"
+
+            # --- 4. التفاعل ---
+            followers = stats.get('followerCount', 0)
+            likes = stats.get('heart', 0)
+            videos = stats.get('videoCount', 0)
+            
+            # حساب نسبة التفاعل (لايكات ÷ فيديوهات)
+            engagement = "0"
+            if videos > 0:
+                engagement = f"{int(likes / videos):,}"
+
+            # إرجاع النتيجة النهائية جاهزة
+            return {
+                "name": user.get("nickname"),
+                "username": user.get("uniqueId"),
+                "id": user.get("id"),
+                "bio": user.get("signature", ""),
+                "followers": f"{followers:,}",
+                "following": f"{stats.get('followingCount', 0):,}",
+                "friends": f"{stats.get('friendCount', 0):,}", # عدد الأصدقاء المخفي
+                "likes": f"{likes:,}",
+                "videos": f"{videos:,}",
+                "engagement": engagement,
+                "country": final_country,
+                "created": create_date,
+                "age": calculate_account_age(create_date),
+                "nick_mod": fmt_date(user.get("nickNameModifyTime", 0)), # متى غير اسمه
+                "unique_mod": fmt_date(user.get("uniqueIdModifyTime", 0)), # متى غير اليوزر
+                "verified": "نعم ✅" if user.get("verified", False) else "لا ❌",
+                "private": "نعم 🔒" if user.get("privateAccount", False) else "لا ❌",
+                "dl": dl_set, "duet": duet_set, "stitch": stitch_set,
+                "commerce": "نعم ✅" if user.get("commerceUserInfo", {}).get("commerceUser") else "لا ❌", # هل عنده متجر
+                "lang": user.get("language", "N/A").upper(),
+                "quality": analyze_quality(followers, likes, videos), # استدعاء دالة تحليل الجودة
+                "avatar": user.get("avatarLarger") or user.get("avatarMedium") # رابط الصورة
+            }
+
+        except Exception as e:
+            return None
+
+# ==========================================
+# 🤖 تشغيل البوت (Handlers)
+# ==========================================
+bot = Bot(token=TOKEN)
+dp = Dispatcher()
+
+# # استجابة لأمر /start
+@dp.message(Command("start"))
+async def start_handler(message: Message):
+    await message.reply("👋 **أهلاً بك!**\n\n🔗 أرسل رابط الحساب أو اليوزر (مثال: @username) للتحليل:", parse_mode="Markdown")
+
+# # استجابة لأي رسالة نصية (الرابط أو اليوزر)
+@dp.message(F.text)
+async def analyze_vip(message: Message):
+    wait_msg = await message.reply("🔎 **جاري التحليل الشامل (VIP)...**")
+    
+    # استدعاء دالة التحليل الرئيسية وانتظار النتيجة
+    data = await fetch_tiktok_vip(message.text)
+    
+    # إذا فشل التحليل
+    if not data:
+        await wait_msg.edit_text("❌ لم يتم العثور على الحساب.")
+        return
+
+    # # بناء شكل التقرير النهائي (Text Formatting)
+    report = (
+        "💎 **تقرير الحساب الشامل (VIP)**\n"
+        "━━━━━━━━━━━━━━━━━━\n"
+        "👤 **البيانات الشخصية:**\n"
+        f"├ **الاسم:** {data['name']}\n"
+        f"├ **اليوزر:** @{data['username']}\n"
+        f"├ **المعرف (ID):** `{data['id']}`\n"
+        f"└ **تصنيف الحساب:** {data['quality']}\n\n"
+        
+        "📊 **الإحصائيات الرقمية:**\n"
+        f"├ **المتابعين:** {data['followers']}\n"
+        f"├ **يتابع:** {data['following']}\n"
+        f"├ **الأصدقاء (FriendCount):** {data['friends']} 🔒\n"
+        f"├ **الإعجابات:** {data['likes']}\n"
+        f"└ **متوسط التفاعل:** {data['engagement']} ❤️/فيديو 📈\n\n"
+        
+        "🌍 **التاريخ والموقع:**\n"
+        f"├ **الدولة:** {data['country']}\n"
+        f"├ **تاريخ الإنشاء:** {data['created']}\n"
+        f"├ **عمر الحساب:** {data['age']}\n"
+        f"├ **تعديل اليوزر:** {data['unique_mod']}\n"
+        f"└ **تعديل الاسم:** {data['nick_mod']}\n\n"
+        
+        "🔐 **إعدادات الخصوصية (Spy Mode):**\n"
+        f"├ **حساب موثق:** {data['verified']}\n"
+        f"├ **حساب خاص:** {data['private']}\n"
+        f"├ **إعدادات التحميل:** {data['dl']}\n"
+        f"├ **إعدادات الدويتو:** {data['duet']}\n"
+        f"└ **إعدادات الدمج:** {data['stitch']}\n\n"
+        
+        "🛒 **بيانات أخرى:**\n"
+        f"├ **يوجد متجر:** {data['commerce']}\n"
+        f"└ **لغة الحساب:** {data['lang']}\n\n"
+        
+        "📝 **السيرة الذاتية (Bio):**\n"
+        f"{data['bio']}\n"
+        "━━━━━━━━━━━━━━━━━━"
+    )
+
+    # # محاولة إرسال الصورة مع التقرير
+    if data['avatar']:
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.get(data['avatar'])
+                if resp.status_code == 200:
+                    img = BufferedInputFile(resp.content, filename="profile.jpg")
+                    # إرسال الصورة والتقرير في الأسفل (Caption)
+                    await message.reply_photo(photo=img, caption=report, parse_mode="Markdown")
+                    await wait_msg.delete() # حذف رسالة "جاري التحليل"
+                    return
+        except: pass
+
+    # إذا لم توجد صورة، نرسل النص فقط
+    await wait_msg.edit_text(report, parse_mode="Markdown")
+
+# # نقطة انطلاق البوت
+async def main():
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
