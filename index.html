@@ -1,35 +1,156 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
+
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>SAIF AI</title>
+
+<style>
+
+body{
+background:black;
+font-family:monospace;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+margin:0;
+color:#00ff9c;
+}
+
+/* صندوق الدردشة */
+
+.chat-container{
+width:360px;
+height:600px;
+border:2px solid #00ff9c;
+border-radius:10px;
+display:flex;
+flex-direction:column;
+overflow:hidden;
+box-shadow:0 0 20px #00ff9c;
+}
+
+/* العنوان */
+
+.header{
+text-align:center;
+padding:10px;
+border-bottom:1px solid #00ff9c;
+font-size:20px;
+}
+
+/* الرسائل */
+
+.chat{
+flex:1;
+padding:10px;
+overflow-y:auto;
+}
+
+/* الرسالة */
+
+.message{
+margin:8px 0;
+padding:8px 12px;
+border-radius:6px;
+max-width:80%;
+}
+
+/* رسالة المستخدم */
+
+.user{
+background:#003b2a;
+align-self:flex-end;
+}
+
+/* رسالة الذكاء */
+
+.ai{
+background:#001a13;
+align-self:flex-start;
+}
+
+/* منطقة الإدخال */
+
+.input-area{
+display:flex;
+border-top:1px solid #00ff9c;
+}
+
+input{
+flex:1;
+padding:10px;
+background:black;
+border:none;
+color:#00ff9c;
+}
+
+button{
+background:#00ff9c;
+border:none;
+padding:10px 15px;
+cursor:pointer;
+}
+
+</style>
+
 </head>
 
-<body style="background:black;color:#00ff00;font-family:monospace">
+<body>
 
-<h1>SAIF AI TERMINAL</h1>
+<div class="chat-container">
 
-<input id="msg">
+<div class="header">
+SAIF AI
+</div>
+
+<div class="chat" id="chat">
+
+<div class="message ai">
+مرحبا 👋  
+أنا SAIF AI كيف يمكنني مساعدتك؟
+</div>
+
+</div>
+
+<div class="input-area">
+
+<input id="msg" placeholder="اكتب رسالتك...">
+
 <button onclick="send()">ارسال</button>
 
-<div id="chat"></div>
+</div>
+
+</div>
 
 <script>
 
-async function send(){
+function send(){
 
-let msg=document.getElementById("msg").value
+let input=document.getElementById("msg")
+let text=input.value
 
-let res=await fetch("YOUR_SERVER/chat",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({msg:msg})
-})
+if(text=="") return
 
-let data=await res.json()
+let chat=document.getElementById("chat")
 
-document.getElementById("chat").innerHTML+=
-"<p>"+data.reply+"</p>"
+chat.innerHTML+=`
+<div class="message user">${text}</div>
+`
+
+/* رد تجريبي */
+
+setTimeout(()=>{
+chat.innerHTML+=`
+<div class="message ai">تم استلام الرسالة</div>
+`
+chat.scrollTop=chat.scrollHeight
+},500)
+
+input.value=""
 
 }
 
