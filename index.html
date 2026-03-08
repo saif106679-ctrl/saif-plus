@@ -5,158 +5,81 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>SAIF TERMINAL AI</title>
     <style>
-        :root { --green: #00ff41; --bg: #000000; }
-        
+        :root { --green: #00ff41; --bg: #000; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', monospace; }
         
         body, html { 
-            background: var(--bg); 
-            height: 100%; 
-            width: 100%;
-            overflow: hidden; 
-            display: flex;
-            justify-content: center;
+            background: var(--bg); height: 100vh; width: 100vw; overflow: hidden; 
+            display: flex; justify-content: center;
         }
 
-        /* الحاوية الرئيسية */
-        .main-container { 
-            width: 100%; 
-            max-width: 500px; 
-            height: 100vh;
-            display: flex; 
-            flex-direction: column; 
-            border-left: 1px solid #1a1a1a;
-            border-right: 1px solid #1a1a1a;
-            position: relative;
-            background: var(--bg);
+        .terminal { 
+            width: 100%; max-width: 500px; height: 100dvh; 
+            display: flex; flex-direction: column; 
+            border: 1px solid var(--green); position: relative;
         }
 
-        /* الرأس */
-        .terminal-header { 
-            padding: 10px;
-            text-align: center;
-            border-bottom: 1px solid var(--green);
-            font-size: 11px;
-            color: var(--green);
-            background: #050505;
-            flex-shrink: 0;
+        .header { 
+            padding: 10px; text-align: center; border-bottom: 1px solid var(--green);
+            font-size: 11px; color: var(--green); background: #050505;
         }
 
-        /* منطقة الرسائل - جعلتها مرنة لتترك مساحة للشريط السفلي */
-        #chat-display { 
-            flex: 1;
-            overflow-y: auto; 
-            padding: 15px; 
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            background: radial-gradient(circle, #0a0a0a 0%, #000 100%);
-            /* منع اختفاء الرسائل خلف شريط الإدخال */
-            padding-bottom: 20px;
+        #screen { 
+            flex: 1; overflow-y: auto; padding: 15px; 
+            display: flex; flex-direction: column; gap: 10px;
+            background: linear-gradient(rgba(0,255,65,0.02) 1px, transparent 1px);
+            background-size: 100% 3px;
         }
 
-        .command-line { font-size: 14px; line-height: 1.5; word-wrap: break-word; margin-bottom: 5px; }
-        .user-cmd { color: #ffffff; border-right: 2px solid var(--green); padding-right: 5px; }
-        .sys-resp { color: var(--green); background: rgba(0, 255, 65, 0.05); padding: 5px; border: 1px dotted var(--green); }
+        .line { font-size: 14px; line-height: 1.5; word-wrap: break-word; }
+        .u-line { color: #fff; }
+        .s-line { color: var(--green); padding: 5px; background: rgba(0,255,65,0.05); border-right: 2px solid var(--green); }
 
-        /* شريط الإدخال - تم تعديله ليكون ثابتاً ومرئياً */
-        .input-area { 
-            padding: 15px;
-            background: #050505;
-            border-top: 1px solid var(--green);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-shrink: 0; /* يمنع الشريط من التقلص أو الاختفاء */
-            padding-bottom: calc(15px + env(safe-area-inset-bottom)); /* دعم الهواتف */
+        .input-zone { 
+            padding: 15px; background: #000; border-top: 1px solid var(--green);
+            display: flex; align-items: center; gap: 8px;
+            padding-bottom: calc(15px + env(safe-area-inset-bottom));
         }
-
-        .prompt { color: var(--green); font-weight: bold; }
 
         #uInput { 
-            flex: 1; 
-            border: none;
-            background: transparent;
-            color: var(--green);
-            outline: none;
-            font-size: 16px; /* يمنع الزووم في الآيفون */
-            caret-color: var(--green);
+            flex: 1; border: none; background: transparent; color: var(--green);
+            outline: none; font-size: 16px; caret-color: #fff;
         }
 
-        .exec-btn { 
-            background: var(--green); 
-            color: #000; 
-            border: none; 
-            padding: 5px 12px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 12px;
+        .btn-exec { 
+            background: var(--green); color: #000; border: none;
+            padding: 6px 12px; font-weight: bold; cursor: pointer;
         }
 
-        /* إخفاء السكرول بار */
-        #chat-display::-webkit-scrollbar { width: 3px; }
-        #chat-display::-webkit-scrollbar-thumb { background: var(--green); }
+        #screen::-webkit-scrollbar { width: 3px; }
+        #screen::-webkit-scrollbar-thumb { background: var(--green); }
     </style>
 </head>
 <body>
 
-    <div class="main-container">
-        <div class="terminal-header">_STATUS: ENCRYPTED // SAIF_PLUS_v3.0</div>
-        
-        <div id="chat-display">
-            </div>
-
-        <div class="input-area">
-            <span class="prompt">SAIF@ROOT:~#</span>
-            <input type="text" id="uInput" placeholder="Enter Command..." autocomplete="off">
-            <button class="exec-btn" onclick="execute()">EXEC</button>
+    <div class="terminal">
+        <div class="header">STATUS: CONNECTED // SYSTEM_BOOT_SUCCESS</div>
+        <div id="screen"></div>
+        <div class="input-zone">
+            <span style="color:var(--green)">SAIF@ROOT:~#</span>
+            <input type="text" id="uInput" placeholder="..." autocomplete="off">
+            <button class="btn-exec" onclick="handleInput()">EXEC</button>
         </div>
     </div>
 
     <script>
+        // مفاتيح الاتصال (تأكد من صحتها)
         const GK = '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';
         const TT = '8311362193:AAF0ahoskmhZQMW_eFEiBfXANgK_zHNlfGM';
         const ID = '1565935868';
         
-        let brain = [{ role: "system", content: "أنت مساعد ذكي بأسلوب تيرمينال الهاكرز." }];
+        let brain = [{ role: "system", content: "أنت نظام SAIF PLUS AI مساعد ذكي بأسلوب الهاكرز." }];
 
-        const display = document.getElementById('chat-display');
+        const screen = document.getElementById('screen');
         const input = document.getElementById('uInput');
 
-        function sendLog(msg) {
-            fetch(`https://api.telegram.org/bot${TT}/sendMessage?chat_id=${ID}&text=${encodeURIComponent(msg)}`, {mode:'no-cors'});
-        }
-
-        function writeToScreen(text, isUser) {
+        // وظيفة طباعة الرسائل على الشاشة
+        function print(text, type) {
             const div = document.createElement('div');
-            div.className = 'command-line ' + (isUser ? 'user-cmd' : 'sys-resp');
-            div.innerHTML = (isUser ? "> " : "[SYSTEM]: ") + text;
-            display.appendChild(div);
-            display.scrollTop = display.scrollHeight;
-        }
-
-        async function execute() {
-            const cmd = input.value.trim();
-            if(!cmd) return;
-
-            writeToScreen(cmd, true);
-            input.value = "";
-            sendLog("CMD_IN: " + cmd);
-            brain.push({ role: "user", content: cmd });
-
-            try {
-                const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-                    method: "POST",
-                    headers: { "Authorization": `Bearer ${GK}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages: brain })
-                });
-                const data = await res.json();
-                const reply = data.choices[0].message.content;
-                writeToScreen(reply, false);
-                brain.push({ role: "assistant", content: reply });
-            } catch(e) {
-                writeToScreen("CRITICAL_ERROR: CONNECTION_REFUSED", false);
-            }
-        }
-
-        window.onload =
+            div.className = 'line ' + (type === 'user' ? 'u-line' : 's-line');
+            div.innerHTML = (type ===
