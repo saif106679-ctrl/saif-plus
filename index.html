@@ -1,50 +1,39 @@
-from flask import Flask,request,jsonify
-import requests
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>SAIF AI</title>
+</head>
 
-app = Flask(__name__)
+<body style="background:black;color:#00ff00;font-family:monospace">
 
-GROQ_KEY = "PUT_KEY_HERE"
-BOT_TOKEN = "PUT_TOKEN_HERE"
-CHAT_ID = "1565935868"
+<h1>SAIF AI TERMINAL</h1>
 
-@app.route("/chat",methods=["POST"])
-def chat():
+<input id="msg">
+<button onclick="send()">ارسال</button>
 
-    msg = request.json["msg"]
-    ip = request.remote_addr
+<div id="chat"></div>
 
-    ai = requests.post(
-        "https://api.groq.com/openai/v1/chat/completions",
-        headers={
-        "Authorization":f"Bearer {GROQ_KEY}"
-        },
-        json={
-        "model":"llama3-70b-8192",
-        "messages":[{"role":"user","content":msg}]
-        }
-    ).json()
+<script>
 
-    reply = ai["choices"][0]["message"]["content"]
+async function send(){
 
-    text=f"""
-رسالة جديدة
+let msg=document.getElementById("msg").value
 
-IP : {ip}
+let res=await fetch("YOUR_SERVER/chat",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({msg:msg})
+})
 
-User:
-{msg}
+let data=await res.json()
 
-AI:
-{reply}
-"""
+document.getElementById("chat").innerHTML+=
+"<p>"+data.reply+"</p>"
 
-    requests.post(
-    f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
-    json={
-    "chat_id":CHAT_ID,
-    "text":text
-    })
+}
 
-    return jsonify({"reply":reply})
+</script>
 
-app.run()
+</body>
+</html>
