@@ -3,86 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SAIF PLUS AI</title>
+    <title>SAIF PLUS AI | TERMINAL</title>
     <style>
         :root { 
-            --blue: #e0f2fe; 
-            --tg: #2481cc; 
-            --dark: #111827;
-            /* حساب الارتفاع الديناميكي للمتصفحات الحديثة */
-            --safe-height: 100vh;
-            --safe-height: 100dvh; 
+            --hacker-green: #00ff41; 
+            --dark-bg: #0a0a0a;
+            --terminal-font: 'Courier New', Courier, monospace;
         }
         
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--terminal-font); }
         
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: #f0f2f5; 
-            display: flex; 
-            justify-content: center; 
-            height: var(--safe-height);
-            width: 100vw;
-            overflow: hidden;
-            /* دعم هواتف آيفون الحديثة ذات النتوء السفلي */
-            padding-bottom: env(safe-area-inset-bottom);
+            background: var(--dark-bg); 
+            height: 100vh; 
+            height: -webkit-fill-available;
+            overflow: hidden; 
+            display: flex;
+            justify-content: center;
+            color: var(--hacker-green);
         }
 
         .mobile-wrapper { 
             width: 100%; 
-            max-width: 420px; 
-            background: white; 
-            height: var(--safe-height);
+            max-width: 450px; 
+            background: rgba(0, 0, 0, 0.95); 
             display: flex; 
             flex-direction: column; 
+            height: 100%;
             position: relative;
-            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            border-left: 1px solid #1a1a1a;
+            border-right: 1px solid #1a1a1a;
         }
 
+        /* رأس الصفحة بأسلوب التيرمينال */
         .header { 
-            padding: env(safe-area-inset-top) 15px 12px 15px; /* حماية الجزء العلوي في سناب وآيفون */
-            text-align: center; 
-            font-weight: bold; 
-            border-bottom: 1px solid #f0f0f0; 
-            font-size: 1.1rem; 
-            background: white;
-            flex-shrink: 0;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            font-weight: bold;
+            border-bottom: 1px solid var(--hacker-green);
+            background: #000;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.9rem;
+            text-shadow: 0 0 5px var(--hacker-green);
+        }
+
+        .header::before {
+            content: "> ";
+            animation: blink 1s infinite;
         }
 
         #chat-box { 
-            flex: 1; 
+            flex: 1;
             overflow-y: auto; 
-            padding: 15px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px; 
-            background: #f9fafb;
-            /* منع السحب لأسفل الذي قد يغلق المتصفح في سناب شات */
-            overscroll-behavior-y: contain; 
+            padding: 20px; 
+            padding-bottom: 120px; /* مساحة كافية للشريط السفلي */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background-image: linear-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px);
+            background-size: 100% 3px; /* تأثير الخطوط الأفقية القديمة */
         }
 
         .msg { 
-            max-width: 85%; 
-            padding: 10px 15px; 
-            border-radius: 18px; 
-            font-size: 15px; 
-            line-height: 1.5; 
-            word-wrap: break-word;
+            max-width: 90%; 
+            padding: 10px; 
+            font-size: 14px; 
+            line-height: 1.6;
             position: relative;
+            word-wrap: break-word;
         }
 
+        /* رسالة المستخدم */
         .sent { 
-            align-self: flex-end; 
-            background: var(--tg); 
-            color: white;
-            border-bottom-right-radius: 4px; 
+            align-self: flex-start; 
+            color: #fff;
+            border-right: 2px solid #fff;
+            padding-right: 10px;
         }
+        .sent::before { content: "[USER@SAIF]: "; color: #888; font-size: 10px; display: block; }
 
+        /* رسالة النظام (الهاكر) */
         .received { 
             align-self: flex-start; 
-            background: #e9e9eb; 
-            color: #1a1a1a;
-            border-bottom-left-radius: 4px; 
-        }
-
-        /* تحسين منطقة الإدخال لتجنب الاختفاء تحت لوحة المفاتيح */
+            background: rgba(0,
